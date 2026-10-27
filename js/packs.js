@@ -70,7 +70,19 @@ function renderRates(){
 }
 
 var shownPacks = -1;
+function updateMegaUI(){
+  var n = (P && P.mega_packs) || 0;
+  var b = $('btn-open-mega');
+  if (b) b.textContent = n > 0 ? ('Ouvrir un Méga Pack offert (' + n + ' 🎁)') : 'Ouvrir (100 🪙)';
+  var f = $('mega-free');
+  if (f){
+    f.hidden = n <= 0;
+    f.textContent = n > 0 ? ('Tu as ' + n + ' Méga Pack' + (n > 1 ? 's' : '') + ' offert' + (n > 1 ? 's' : '') + ' 🎁') : '';
+  }
+}
+
 function renderPacks(){
+  updateMegaUI();
   var n = livePacks(), empty = !cards.length;
   shownPacks = n;
   if($('pk-n')) $('pk-n').textContent = n;
