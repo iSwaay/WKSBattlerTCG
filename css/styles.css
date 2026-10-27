@@ -259,6 +259,17 @@ button.slot:hover .cb{transform:translateY(-3px)}
 .cb.is-3d .card.r-e .card-in, .cb.is-3d .card.r-l .card-in { transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1); }
 .cb.is-3d.interacting .card.r-e .card-in, .cb.is-3d.interacting .card.r-l .card-in { transform: translateZ(16px); transition: transform 0.05s linear; }
 
+/* Correctif flip : dans une face retournée, le contenu doit rester "à plat"
+   sinon preserve-3d ignore backface-visibility et le verso apparaît en miroir. */
+.face .cb.is-3d, .pkc-face .cb.is-3d,
+.face .cb.is-3d .card, .pkc-face .cb.is-3d .card {
+  transform-style: flat;
+}
+.face *, .pkc-face * {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
 /* Reflets / Glare */
 .glare { position: absolute; inset: 0; border-radius: 6cqw; pointer-events: none; opacity: 0; transition: opacity 0.3s; z-index: 5; }
 .cb.is-3d.interacting .glare { opacity: 1; }
