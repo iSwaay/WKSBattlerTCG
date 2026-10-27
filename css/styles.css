@@ -270,6 +270,23 @@ button.slot:hover .cb{transform:translateY(-3px)}
   backface-visibility: hidden;
 }
 
+/* Filet de sécurité multi-navigateurs (Safari/Firefox ignorent parfois
+   backface-visibility avec container-type / overflow / filter) :
+   on masque explicitement la face non visible, à mi-rotation. */
+.pkc-back  { visibility: visible; transition: visibility 0s linear .32s; }
+.pkc-front { visibility: hidden;  transition: visibility 0s linear .32s; }
+.pk-slot.on .pkc-back  { visibility: hidden; }
+.pk-slot.on .pkc-front { visibility: visible; }
+
+.face.back  { visibility: visible; transition: visibility 0s linear .3s; }
+.face.front { visibility: hidden;  transition: visibility 0s linear .3s; }
+.flip.on .face.back  { visibility: hidden; }
+.flip.on .face.front { visibility: visible; }
+
+@media (prefers-reduced-motion: reduce) {
+  .pkc-back, .pkc-front, .face.back, .face.front { transition-delay: 0s; }
+}
+
 /* Reflets / Glare */
 .glare { position: absolute; inset: 0; border-radius: 6cqw; pointer-events: none; opacity: 0; transition: opacity 0.3s; z-index: 5; }
 .cb.is-3d.interacting .glare { opacity: 1; }
