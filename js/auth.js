@@ -40,7 +40,7 @@ function resetLocal(){
 async function boot(){
   authMode = 'loading'; renderAuth('Chargement de ta partie…');
   try{
-    var pr = await sb.from('profiles').select('username,is_admin,is_owner,showcase,tokens,inventory,active_card').eq('id', U.id).single();
+    var pr = await sb.from('profiles').select('username,is_admin,is_owner,showcase,tokens,mega_packs,inventory,active_card').eq('id', U.id).single();
     if (pr.error) throw pr.error;
     P = pr.data;
     await syncState();
