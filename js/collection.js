@@ -220,6 +220,7 @@ function renderProfile() {
 
 function updateInvUI() {
     if($('ui-tokens')) $('ui-tokens').textContent = P.tokens || 0;
+    if (typeof updateMegaUI === 'function') updateMegaUI();
     var inv = P.inventory || {};
     if($('inv-potion_soin')) $('inv-potion_soin').textContent = inv.potion_soin || 0;
     if($('inv-potion_energie')) $('inv-potion_energie').textContent = inv.potion_energie || 0;
