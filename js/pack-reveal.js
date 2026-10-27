@@ -21,7 +21,7 @@ function zigzag(){
 function flipHTML(c, i, isNew, extra, id, delay){
   var hi = ri(c.r) >= 3;
   return '<button type="button" class="flip'+(hi?' hi':'')+(extra?' '+extra:'')+'"'+(id?' id="'+id+'"':'')+' data-i="'+i+'" style="--glow:'+(GLOW[c.r]||'transparent')+';--d:'+delay+'s" aria-label="Retourner la carte '+(i+1)+'">'+
-    '<div class="flip-in"><div class="face back"><span>W</span></div><div class="face front">'+cardHTML(c)+(isNew?'<em class="new">Nouvelle</em>':'')+'</div></div></button>';
+    '<div class="flip-in"><div class="face back"><img src="logo.png" style="width:50%;"></div><div class="face front">'+cardHTML(c)+(isNew?'<em class="new">Nouvelle</em>':'')+'</div></div></button>';
 }
 
 // Ces tailles décident si les cartes tiennent sur une ligne (sinon : une carte à la fois)
@@ -76,8 +76,7 @@ function showPack(cards, flags, title){
             '<button type="button" class="pkc'+(rIdx >= 2 ? ' shine' : '')+(rIdx === 3 ? ' rainbow' : '')+'" data-i="'+i+'" style="--glow:'+(GLOW[c.r] || 'var(--accent)')+'" aria-label="Retourner la carte '+(i+1)+'">'+
               '<span class="pkc-in">'+
                 '<span class="pkc-face pkc-back"><span class="pkc-bi"><span class="pkc-art">'+
-                  '<span class="pkc-brand">Wiki Packs</span>'+
-                  '<span class="pkc-medal"><span class="pkc-q">?</span></span>'+
+                  '<img src="logo.png" alt="WKS TCG" style="position:absolute; top:45%; left:50%; transform:translate(-50%, -50%); width:75%; z-index:2; filter:drop-shadow(0 4px 10px rgba(0,0,0,0.5));">'+
                   '<span class="pkc-set"><small>SET</small>'+setName+'</span>'+
                 '</span></span></span>'+
                 '<span class="pkc-face pkc-front">'+cardHTML(c)+'</span>'+
@@ -109,142 +108,140 @@ function showPack(cards, flags, title){
         st.scrollTop = 0;
         sfx('tear');
     }
-  }
+}
 
-  function renderSeqCard() {
-      var i = cur.idx;
-      var c = cur.cards[i];
-      var isNew = cur.flags[i];
-      var rIdx = ri(c.r);
-      var R = RAR[rIdx];
-      var setName = c.cat ? esc(c.cat) : 'Wiki Packs';
-      var container = $('pk-active-card-container');
-      
-      var flipHtml = '<div class="pk-slot" id="pk-s'+i+'" style="flex:none; width:min(70vw, 280px); margin:0 auto; transform:none; animation:pkzpop 0.4s cubic-bezier(.2,.9,.3,1.2) both; cursor:pointer;">'+
-          '<div class="pkc'+(rIdx >= 2 ? ' shine' : '')+(rIdx === 3 ? ' rainbow' : '')+'" id="pk-c-el">'+
-            '<div class="pkc-in" id="pkc-in-el">'+
-              '<div class="pkc-face pkc-back"><div class="pkc-bi"><div class="pkc-art">'+
-                '<div class="pkc-brand">Wiki Packs</div>'+
-                '<div class="pkc-medal"><div class="pkc-q">?</div></div>'+
-                '<div class="pkc-set"><small>SET</small>'+setName+'</div>'+
-              '</div></div></div>'+
-              '<div class="pkc-face pkc-front">'+cardHTML(c)+'</div>'+
-            '</div>'+
+function renderSeqCard() {
+    var i = cur.idx;
+    var c = cur.cards[i];
+    var isNew = cur.flags[i];
+    var rIdx = ri(c.r);
+    var R = RAR[rIdx];
+    var setName = c.cat ? esc(c.cat) : 'Wiki Packs';
+    var container = $('pk-active-card-container');
+    
+    var flipHtml = '<div class="pk-slot" id="pk-s'+i+'" style="flex:none; width:min(70vw, 280px); margin:0 auto; transform:none; animation:pkzpop 0.4s cubic-bezier(.2,.9,.3,1.2) both; cursor:pointer;">'+
+        '<div class="pkc'+(rIdx >= 2 ? ' shine' : '')+(rIdx === 3 ? ' rainbow' : '')+'" id="pk-c-el">'+
+          '<div class="pkc-in" id="pkc-in-el">'+
+            '<div class="pkc-face pkc-back"><div class="pkc-bi"><div class="pkc-art">'+
+              '<img src="logo.png" alt="WKS TCG" style="position:absolute; top:45%; left:50%; transform:translate(-50%, -50%); width:75%; z-index:2; filter:drop-shadow(0 4px 10px rgba(0,0,0,0.5));">'+
+              '<div class="pkc-set"><small>SET</small>'+setName+'</div>'+
+            '</div></div></div>'+
+            '<div class="pkc-face pkc-front">'+cardHTML(c)+'</div>'+
           '</div>'+
-        '</div>';
+        '</div>'+
+      '</div>';
 
-      var metaHtml = '<div class="pk-seq-meta" id="pk-seq-meta" style="opacity:0; transform:translateY(10px); transition:all 0.3s; text-align:center; margin-top:20px; height:60px;">' +
-          '<div class="pk-pill" style="--pc:var(--'+R.cls+'); margin-bottom:8px; display:inline-block; font-size:14px; padding:6px 16px; background:var(--surface); color:var(--ink); border-radius:99px; font-weight:700;">'+R.svg.replace('height:1.2em','height:2em')+'</div>' +
-          '<div style="font-weight:800; font-size:18px;">'+ (isNew ? '<span style="color:var(--ink);">Nouvelle carte !</span>' : '<span style="color:var(--muted)">Déjà possédée</span>') + '</div>' +
-          '</div>';
-          
-      var counterHtml = '<div id="pk-seq-count" style="margin-top:20px; font-weight:700; font-size:18px; color:var(--ink); height:60px; display:flex; align-items:center; transition:opacity 0.3s;">Carte '+(i+1)+' / '+cur.cards.length+'</div>';
-
-      container.innerHTML = flipHtml + '<div style="position:relative; height:80px; display:flex; justify-content:center; align-items:flex-start; width:100%;">' + 
-          '<div style="position:absolute; top:0;" id="pk-seq-count-wrap">' + counterHtml + '</div>' + 
-          '<div style="position:absolute; top:0; pointer-events:none;">' + metaHtml + '</div>' + 
-          '</div>';
-      
-      $('pk-s'+i).onclick = handleSeqTap;
-      $('pk-hint').textContent = 'Touchez pour révéler';
-      
-      document.querySelectorAll('.pk-dot').forEach(function(d, idx){
-         if (idx === i) d.style.boxShadow = '0 0 0 2px var(--ink)';
-         else d.style.boxShadow = 'none';
-      });
-  }
-
-  function handleSeqTap() {
-      if (cur.done) return;
-      var i = cur.idx;
-      var c = cur.cards[i];
-      var rIdx = ri(c.r);
-      var R = RAR[rIdx];
-
-      if (cur.step === 0) {
-          cur.step = 1;
-          $('pk-s'+i).classList.add('on');
-          $('pkc-in-el').style.transform = 'rotateY(180deg)';
-          
-          $('pk-seq-count-wrap').style.opacity = '0';
-          $('pk-seq-meta').style.opacity = '1';
-          $('pk-seq-meta').style.transform = 'translateY(0)';
-          
-          var dot = $('pk-dot-'+i);
-          dot.style.background = 'var(--' + R.cls + ')';
-          dot.style.boxShadow = 'none';
-          dot.classList.add('pop');
-          
-          var has = c.img && /^http|data:image\//.test(c.img);
-          var miniHtml = '<div class="pk-mini r-'+R.cls+'" style="border: 2px solid var(--'+R.cls+');">' +
-              '<div class="pk-mini-in" style="'+(has?'background-image:url(\''+c.img+'\')':'')+'"></div>'+
-              (cur.flags[i] ? '<div class="pk-mini-new">Nouveau</div>' : '') +
-          '</div>';
-          $('pk-miniatures').insertAdjacentHTML('beforeend', miniHtml);
-          
-          if (i < cur.cards.length - 1) {
-              $('pk-hint').textContent = 'Touchez pour continuer';
-          } else {
-              $('pk-hint').textContent = 'Touchez pour voir le résumé';
-          }
-
-          if (rIdx >= 2){
-            burst(rIdx); sfx('epic');
-            if (navigator.vibrate) navigator.vibrate([120, 60, 120]);
-          } else {
-            if (rIdx >= 1) burst(rIdx);
-            sfx('flip');
-            if (navigator.vibrate) navigator.vibrate(30);
-          }
-      } else {
-          cur.idx++;
-          if (cur.idx < cur.cards.length) {
-              cur.step = 0;
-              renderSeqCard();
-          } else {
-              finishRevealSeq();
-          }
-      }
-  }
-
-  function finishRevealSeq() {
-      cur.done = true;
-      var st = $('stage');
-      var n = cur.cards.length;
-      var slots = cur.cards.map(function(c, i){
-        var rIdx = ri(c.r), R = RAR[rIdx];
-        return '<div class="pk-slot on" style="width:min(45%, 150px); animation:pkzpop .4s cubic-bezier(.2,.9,.3,1.2) '+(i*0.05)+'s both;">'+
-          '<div class="pkc" data-i="'+i+'">'+
-            '<div class="pkc-in" style="transform:rotateY(180deg)">'+
-              '<div class="pkc-face pkc-front">'+cardHTML(c)+'</div>'+
-            '</div>'+
-          '</div>'+
-        '</div>';
-      }).join('');
-      
-      st.innerHTML =
-        '<div class="burst" id="burst"></div><div id="sparks"></div>'+
-        '<div class="stage-in" style="padding-top:40px; padding-bottom:120px; height:auto; min-height:100dvh;">'+
-          '<h2 class="pk-title" style="color:#fff;">Résumé du tirage</h2>'+
-          '<div style="display:flex; flex-wrap:wrap; justify-content:center; gap:16px; width:100%; margin-bottom:40px;">'+slots+'</div>'+
-          '<div class="pk-bar" id="pk-bar" style="position:fixed; transform:none; left:50%; transform:translateX(-50%); bottom:calc(18px + env(safe-area-inset-bottom,0px)); width:min(960px,calc(100% - 24px)); display:flex;">'+
-            '<div class="pk-bar-l"><b style="color:var(--ink);">'+n+' cartes ajoutées</b><span style="color:var(--muted);">Les cartes sont rangées dans votre collection.</span></div>'+
-            '<div class="pk-bar-r">'+
-              '<button type="button" class="pk-btn" id="pk-col">Voir ma collection</button>'+
-              '<button type="button" class="pk-btn" id="pk-back">Retour</button>'+
-              '<button type="button" class="pk-btn next" id="pk-next"></button>'+
-            '</div>'+
-          '</div>'+
+    var metaHtml = '<div class="pk-seq-meta" id="pk-seq-meta" style="opacity:0; transform:translateY(10px); transition:all 0.3s; text-align:center; margin-top:20px; height:60px;">' +
+        '<div class="pk-pill" style="--pc:var(--'+R.cls+'); margin-bottom:8px; display:inline-block; font-size:14px; padding:6px 16px; background:var(--surface); color:var(--ink); border-radius:99px; font-weight:700;">'+R.svg.replace('height:1.2em','height:2em')+'</div>' +
+        '<div style="font-weight:800; font-size:18px;">'+ (isNew ? '<span style="color:var(--ink);">Nouvelle carte !</span>' : '<span style="color:var(--muted)">Déjà possédée</span>') + '</div>' +
         '</div>';
         
-      var left = livePacks(), nb = $('pk-next');
-      if(nb) {
-          nb.disabled = left <= 0;
-          nb.innerHTML = (left > 0 ? 'Ouvrir le suivant · ' + left + ' booster' + (left > 1 ? 's' : '') + ' <kbd>Espace</kbd>' : 'Plus de booster disponible');
-      }
-      st.scrollTop = 0;
-  }
+    var counterHtml = '<div id="pk-seq-count" style="margin-top:20px; font-weight:700; font-size:18px; color:var(--ink); height:60px; display:flex; align-items:center; transition:opacity 0.3s;">Carte '+(i+1)+' / '+cur.cards.length+'</div>';
 
+    container.innerHTML = flipHtml + '<div style="position:relative; height:80px; display:flex; justify-content:center; align-items:flex-start; width:100%;">' + 
+        '<div style="position:absolute; top:0;" id="pk-seq-count-wrap">' + counterHtml + '</div>' + 
+        '<div style="position:absolute; top:0; pointer-events:none;">' + metaHtml + '</div>' + 
+        '</div>';
+    
+    $('pk-s'+i).onclick = handleSeqTap;
+    $('pk-hint').textContent = 'Touchez pour révéler';
+    
+    document.querySelectorAll('.pk-dot').forEach(function(d, idx){
+       if (idx === i) d.style.boxShadow = '0 0 0 2px var(--ink)';
+       else d.style.boxShadow = 'none';
+    });
+}
+
+function handleSeqTap() {
+    if (cur.done) return;
+    var i = cur.idx;
+    var c = cur.cards[i];
+    var rIdx = ri(c.r);
+    var R = RAR[rIdx];
+
+    if (cur.step === 0) {
+        cur.step = 1;
+        $('pk-s'+i).classList.add('on');
+        $('pkc-in-el').style.transform = 'rotateY(180deg)';
+        
+        $('pk-seq-count-wrap').style.opacity = '0';
+        $('pk-seq-meta').style.opacity = '1';
+        $('pk-seq-meta').style.transform = 'translateY(0)';
+        
+        var dot = $('pk-dot-'+i);
+        dot.style.background = 'var(--' + R.cls + ')';
+        dot.style.boxShadow = 'none';
+        dot.classList.add('pop');
+        
+        var has = c.img && /^http|data:image\//.test(c.img);
+        var miniHtml = '<div class="pk-mini r-'+R.cls+'" style="border: 2px solid var(--'+R.cls+');">' +
+            '<div class="pk-mini-in" style="'+(has?'background-image:url(\''+c.img+'\')':'')+'"></div>'+
+            (cur.flags[i] ? '<div class="pk-mini-new">Nouveau</div>' : '') +
+        '</div>';
+        $('pk-miniatures').insertAdjacentHTML('beforeend', miniHtml);
+        
+        if (i < cur.cards.length - 1) {
+            $('pk-hint').textContent = 'Touchez pour continuer';
+        } else {
+            $('pk-hint').textContent = 'Touchez pour voir le résumé';
+        }
+
+        if (rIdx >= 2){
+          burst(rIdx); sfx('epic');
+          if (navigator.vibrate) navigator.vibrate([120, 60, 120]);
+        } else {
+          if (rIdx >= 1) burst(rIdx);
+          sfx('flip');
+          if (navigator.vibrate) navigator.vibrate(30);
+        }
+    } else {
+        cur.idx++;
+        if (cur.idx < cur.cards.length) {
+            cur.step = 0;
+            renderSeqCard();
+        } else {
+            finishRevealSeq();
+        }
+    }
+}
+
+function finishRevealSeq() {
+    cur.done = true;
+    var st = $('stage');
+    var n = cur.cards.length;
+    var slots = cur.cards.map(function(c, i){
+      var rIdx = ri(c.r), R = RAR[rIdx];
+      return '<div class="pk-slot on" style="width:min(45%, 150px); animation:pkzpop .4s cubic-bezier(.2,.9,.3,1.2) '+(i*0.05)+'s both;">'+
+        '<div class="pkc" data-i="'+i+'">'+
+          '<div class="pkc-in" style="transform:rotateY(180deg)">'+
+            '<div class="pkc-face pkc-front">'+cardHTML(c)+'</div>'+
+          '</div>'+
+        '</div>'+
+      '</div>';
+    }).join('');
+    
+    st.innerHTML =
+      '<div class="burst" id="burst"></div><div id="sparks"></div>'+
+      '<div class="stage-in" style="padding-top:40px; padding-bottom:120px; height:auto; min-height:100dvh;">'+
+        '<h2 class="pk-title" style="color:#fff;">Résumé du tirage</h2>'+
+        '<div style="display:flex; flex-wrap:wrap; justify-content:center; gap:16px; width:100%; margin-bottom:40px;">'+slots+'</div>'+
+        '<div class="pk-bar" id="pk-bar" style="position:fixed; transform:none; left:50%; transform:translateX(-50%); bottom:calc(18px + env(safe-area-inset-bottom,0px)); width:min(960px,calc(100% - 24px)); display:flex;">'+
+          '<div class="pk-bar-l"><b style="color:var(--ink);">'+n+' cartes ajoutées</b><span style="color:var(--muted);">Les cartes sont rangées dans votre collection.</span></div>'+
+          '<div class="pk-bar-r">'+
+            '<button type="button" class="pk-btn" id="pk-col">Voir ma collection</button>'+
+            '<button type="button" class="pk-btn" id="pk-back">Retour</button>'+
+            '<button type="button" class="pk-btn next" id="pk-next"></button>'+
+          '</div>'+
+        '</div>'+
+      '</div>';
+      
+    var left = livePacks(), nb = $('pk-next');
+    if(nb) {
+        nb.disabled = left <= 0;
+        nb.innerHTML = (left > 0 ? 'Ouvrir le suivant · ' + left + ' booster' + (left > 1 ? 's' : '') + ' <kbd>Espace</kbd>' : 'Plus de booster disponible');
+    }
+    st.scrollTop = 0;
+}
 
 function flipCard(i){
   var sl = $('pk-s' + i);
@@ -349,4 +346,3 @@ function toast(msg){
   var t = $('toast'); t.textContent = msg; t.hidden = false;
   clearTimeout(tt); tt = setTimeout(function(){ t.hidden = true; }, 2800);
 }
-
