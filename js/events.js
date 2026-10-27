@@ -112,8 +112,9 @@ document.addEventListener('click', async function(e){
 
   if (t.closest('#btn-open-mega') || t.closest('#pack-mega')) {
       if (opening) return;
-      if ((P.tokens || 0) < 100) { toast("Fonds insuffisants. Il te faut 100 🪙."); return; }
-      if (!confirm("Ouvrir 1 Pack Méga pour 100 🪙 ?")) return;
+      var hasFreeMega = (P.mega_packs || 0) > 0;
+      if (!hasFreeMega && (P.tokens || 0) < 100) { toast("Fonds insuffisants. Il te faut 100 🪙."); return; }
+      if (!confirm(hasFreeMega ? "Ouvrir 1 Pack Méga offert ?" : "Ouvrir 1 Pack Méga pour 100 🪙 ?")) return;
       
       opening = true; renderPacks();
       var shown = null;
@@ -122,7 +123,8 @@ document.addEventListener('click', async function(e){
         if (r.error) throw r.error;
         if (r.data && r.data.error) throw new Error(r.data.error);
         
-        P.tokens -= 100; // Update UI locally
+        if (typeof r.data.tokens === 'number') P.tokens = r.data.tokens;
+        if (typeof r.data.mega_packs === 'number') P.mega_packs = r.data.mega_packs;
         updateInvUI();
         
         await loadCol();
@@ -432,9 +434,9 @@ document.addEventListener('click', async function(e){
             updateInvUI();
             toast('Code valide ! +' + data.amount + ' Jetons 🪙');
         } else if (data.type === 'mega_packs') {
-            P.tokens = data.total_tokens;
+            P.mega_packs = data.mega_packs;
             updateInvUI();
-            toast('Code valide ! +' + data.amount + ' Méga Pack' + (data.amount > 1 ? 's' : '') + ' (' + data.tokens_added + ' 🪙 ajoutés) 🎁');
+            toast('Code valide ! +' + data.amount + ' Méga Pack' + (data.amount > 1 ? 's' : '') + ' offert' + (data.amount > 1 ? 's' : '') + ' 🎁');
         } else if (data.type === 'packs') {
             if (data.state){ applyState(data.state); renderPacks(); }
             toast('Code valide ! +' + data.amount + ' pack' + (data.amount > 1 ? 's' : '') + ' 📦');
