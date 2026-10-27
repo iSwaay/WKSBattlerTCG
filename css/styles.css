@@ -619,3 +619,12 @@ body { padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px)); }
 .pkc-back, .face.back{visibility:visible}
 .pk-slot.on .pkc-back, .flip.on .face.back{visibility:hidden;transition:visibility 0s linear .32s}
 .pk-slot.on .pkc-front, .flip.on .face.front{visibility:visible;transition:visibility 0s linear .32s}
+
+/* --- Correctif flip (suite) : l'effet de tilt 3D (.cb.is-3d, preserve-3d) ne doit pas se propager
+   dans les faces retournées, sinon backface-visibility est ignoré et le verso apparaît en miroir. --- */
+.face .cb.is-3d, .pkc-face .cb.is-3d,
+.face .cb.is-3d .card, .pkc-face .cb.is-3d .card{transform-style:flat}
+.pkc-front *, .face.front *{-webkit-backface-visibility:hidden;backface-visibility:hidden}
+@media (prefers-reduced-motion: reduce){
+  .pk-slot.on .pkc-back, .flip.on .face.back, .pk-slot.on .pkc-front, .flip.on .face.front{transition-delay:0s}
+}
