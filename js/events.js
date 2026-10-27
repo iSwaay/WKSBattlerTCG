@@ -198,6 +198,7 @@ document.addEventListener('click', async function(e){
 
   if (t.closest('.empty-vitrine-slot')) {
       selectMode = 'vitrine';
+      var _mt = $('ms-tools'); if (_mt) _mt.remove();
       $('ms-title').textContent = 'Choisir pour la vitrine';
       var availCards = cards.filter(function(c){ return col[c.id] > 0 && !(P.showcase || []).includes(c.id); });
       if(!availCards.length) {

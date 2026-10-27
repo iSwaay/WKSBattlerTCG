@@ -21,15 +21,23 @@ async function loadSocial() {
 }
 
 /* ---------- SOCIAL (Trades) ---------- */
+var tradeHasInstCol = true; // passe à false si la colonne trade_items.instance_id n'existe pas
 async function loadTrades() {
-    var r = await sb.from('trades').select('id, sender_id, receiver_id, status, created_at, s:profiles!sender_id(username), r:profiles!receiver_id(username), trade_items(id, card_id, owner_id, qty)').or('sender_id.eq.'+U.id+',receiver_id.eq.'+U.id).order('created_at', {ascending: false});
+    function q(cols) {
+        return sb.from('trades').select('id, sender_id, receiver_id, status, created_at, s:profiles!sender_id(username), r:profiles!receiver_id(username), trade_items(' + cols + ')').or('sender_id.eq.'+U.id+',receiver_id.eq.'+U.id).order('created_at', {ascending: false});
+    }
+    var r = await q(tradeHasInstCol ? 'id, card_id, instance_id, owner_id, qty' : 'id, card_id, owner_id, qty');
+    if (r.error && tradeHasInstCol) { tradeHasInstCol = false; r = await q('id, card_id, owner_id, qty'); }
     if(!r.error) { myTrades = r.data; renderTrades(); }
+    else console.error('loadTrades', r.error);
 }
 
 function renderTradeItems(items) {
     if(!items || !items.length) return '<span class="hint" style="font-size:11px">Rien</span>';
     return items.map(function(it){
-        var c = cardById(it.card_id); if(!c) return '';
+        var c = cardById(it.card_id);
+        if(!c && it.instance_id){ var mi = (window.myInstances||[]).find(function(x){ return x.instance_id === it.instance_id; }); if(mi) c = cardById(mi.card_id); }
+        if(!c) return '<div style="width:56px;height:80px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;margin:0 4px 4px 0;border:1px dashed var(--line);color:var(--muted);font-size:18px" title="Carte introuvable">?</div>';
         var m = c.t.match(/[A-Za-zÀ-ÿ0-9]/); var ini = m ? m[0].toUpperCase() : '?';
         var has = c.img && /^http|data:image\//.test(c.img);
         var R = RAR[ri(c.r)];
@@ -125,53 +133,91 @@ function renderTradeBuilder() {
     $('tb-send').disabled = (tradeDraft.give.length === 0 && tradeDraft.ask.length === 0);
 }
 
+var tradeSort = 'rar_desc', tradeQuery = '';
+var TRADE_SORTS = [
+    ['rar_desc','Rareté (haute → basse)'], ['rar_asc','Rareté (basse → haute)'],
+    ['note_desc','Note (haute → basse)'], ['note_asc','Note (basse → haute)'],
+    ['atk_desc','Attaque ↓'], ['def_desc','Défense ↓'], ['hp_desc','PV ↓'],
+    ['name_asc','Nom A → Z'], ['name_desc','Nom Z → A']
+];
+
+function tradeSourceList() {
+    var src = selectMode === 'give' ? (window.myInstances || []) : (tradeDraft.targetInstances || []);
+    var already = selectMode === 'give' ? tradeDraft.give : tradeDraft.ask;
+    var q = tradeQuery.trim().toLowerCase();
+    var list = [];
+    src.forEach(function(inst){
+        if (already.indexOf(inst.instance_id) !== -1) return;
+        var c = cardById(inst.card_id); if (!c) return;
+        if (q && c.t.toLowerCase().indexOf(q) === -1 && String(c.cat||'').toLowerCase().indexOf(q) === -1) return;
+        list.push({inst: inst, c: c, note: calculateNote(c.r, inst.hp, inst.attack, inst.defense)});
+    });
+    var key = tradeSort.split('_')[0], dir = tradeSort.split('_')[1] === 'asc' ? 1 : -1;
+    list.sort(function(a, b){
+        var va, vb;
+        if (key === 'rar') { va = ri(a.c.r); vb = ri(b.c.r); }
+        else if (key === 'note') { va = a.note; vb = b.note; }
+        else if (key === 'atk') { va = a.inst.attack; vb = b.inst.attack; }
+        else if (key === 'def') { va = a.inst.defense; vb = b.inst.defense; }
+        else if (key === 'hp') { va = a.inst.hp; vb = b.inst.hp; }
+        else { return a.c.t.localeCompare(b.c.t, 'fr') * dir; }
+        if (va === vb) { // égalité : note puis nom
+            if (a.note !== b.note) return b.note - a.note;
+            return a.c.t.localeCompare(b.c.t, 'fr');
+        }
+        return (va - vb) * dir;
+    });
+    return list;
+}
+
+function renderTradeSelectGrid() {
+    var grid = $('ms-grid'), sel = window.tradeSel || {};
+    var list = tradeSourceList();
+    if (!list.length) {
+        grid.innerHTML = '<div class="empty-col">' + (tradeQuery ? 'Aucune carte ne correspond.' : 'Aucune carte disponible.') + '</div>';
+        grid.classList.remove('rc-mode');
+        return;
+    }
+    grid.innerHTML = list.map(function(o){
+        return '<button type="button" class="slot ms-pick' + (sel[o.inst.instance_id] ? ' rc-sel' : '') + '" data-id="' + o.inst.instance_id + '">' + cardHTML(o.c, o.inst) + '</button>';
+    }).join('');
+    grid.classList.add('rc-mode');
+}
+
 function openTradeSelect(mode) {
     selectMode = mode;
     window.tradeSel = {}; // Reset selection
+    tradeQuery = '';
     $('ms-title').textContent = mode === 'give' ? 'Ta collection' : ('Collection de ' + tradeDraft.targetUser.username);
-    
-    var sourceInstances = mode === 'give' ? (window.myInstances || []) : (tradeDraft.targetInstances || []);
-    
-    if(!sourceInstances.length) {
-        $('ms-grid').innerHTML = '<div class="empty-col">Collection vide.</div>';
-        $('ms-grid').classList.remove('rc-mode');
-    } else {
-        var html = '';
-        // We must exclude already selected cards in the draft
-        var alreadySelected = mode === 'give' ? tradeDraft.give : tradeDraft.ask;
-        
-        sourceInstances.forEach(function(inst){
-            if (alreadySelected.includes(inst.instance_id)) return;
-            var c = cardById(inst.card_id);
-            if(c) {
-                html += '<button type="button" class="slot ms-pick" data-id="'+inst.instance_id+'">'+cardHTML(c, inst)+'</button>';
-            }
-        });
-        if (html === '') {
-            html = '<div class="empty-col">Aucune autre carte disponible.</div>';
-            $('ms-grid').classList.remove('rc-mode');
-        } else {
-            $('ms-grid').classList.add('rc-mode'); // This applies the grayscale checkmark style
-        }
-        $('ms-grid').innerHTML = html;
-    }
-    
-    // Add a validate button if it's a multi-select mode
+
+    // Barre de tri / recherche (recréée à chaque ouverture)
+    var oldTools = $('ms-tools'); if (oldTools) oldTools.remove();
+    var tools = document.createElement('div');
+    tools.id = 'ms-tools';
+    tools.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;margin-top:12px';
+    tools.innerHTML =
+        '<input type="text" id="ms-search" class="search-input" placeholder="Rechercher une carte…" autocomplete="off" style="flex:1 1 140px;min-width:0;padding:8px 10px">' +
+        '<select id="ms-sort" aria-label="Trier" style="flex:0 1 210px;padding:8px 10px">' +
+        TRADE_SORTS.map(function(o){ return '<option value="'+o[0]+'"'+(o[0]===tradeSort?' selected':'')+'>'+o[1]+'</option>'; }).join('') +
+        '</select>';
+    $('ms-grid').parentNode.insertBefore(tools, $('ms-grid'));
+    $('ms-sort').onchange = function(){ tradeSort = this.value; renderTradeSelectGrid(); };
+    $('ms-search').oninput = function(){ tradeQuery = this.value; renderTradeSelectGrid(); };
+
+    renderTradeSelectGrid();
+
+    var oldActions = $('ts-actions');
+    if (oldActions) oldActions.remove();
     if (mode === 'give' || mode === 'ask') {
         var actions = document.createElement('div');
         actions.id = 'ts-actions';
         actions.style = 'margin-top:16px;display:flex;justify-content:flex-end;gap:8px;';
         actions.innerHTML = '<button type="button" class="btn" id="ts-cancel">Annuler</button><button type="button" class="btn primary" id="ts-ok">Valider (<span id="ts-count">0</span>)</button>';
-        
-        var oldActions = $('ts-actions');
-        if (oldActions) oldActions.remove();
         $('ms-grid').parentNode.appendChild(actions);
     } else {
-        var oldActions = $('ts-actions');
-        if (oldActions) oldActions.remove();
         $('ms-grid').classList.remove('rc-mode');
     }
-    
+
     $('modal-select').hidden = false;
 }
 
@@ -180,17 +226,34 @@ async function submitTrade() {
     $('tb-send').disabled = true;
     var r = await sb.from('trades').insert({sender_id: U.id, receiver_id: tradeDraft.targetUser.id}).select().single();
     if(r.error) { toast(errMsg(r.error)); $('tb-send').disabled = false; return; }
-    
+
     var tid = r.data.id;
+    function mk(instId, list, owner) {
+        var inst = list.find(function(i){ return i.instance_id === instId; });
+        if (!inst) return null;
+        return {trade_id: tid, card_id: inst.card_id, instance_id: inst.instance_id, owner_id: owner, qty: 1};
+    }
     var items = [];
-    tradeDraft.give.forEach(function(cid){ items.push({trade_id: tid, card_id: cid, owner_id: U.id, qty: 1}); });
-    tradeDraft.ask.forEach(function(cid){ items.push({trade_id: tid, card_id: cid, owner_id: tradeDraft.targetUser.id, qty: 1}); });
-    
-    if(items.length > 0) await sb.from('trade_items').insert(items);
-    
+    tradeDraft.give.forEach(function(id){ var o = mk(id, window.myInstances || [], U.id); if (o) items.push(o); });
+    tradeDraft.ask.forEach(function(id){ var o = mk(id, tradeDraft.targetInstances || [], tradeDraft.targetUser.id); if (o) items.push(o); });
+
+    var ins = await sb.from('trade_items').insert(items);
+    if (ins.error && /instance_id/.test(ins.error.message || '')) {
+        // colonne instance_id absente : on enregistre au moins la vraie carte (card_id)
+        tradeHasInstCol = false;
+        ins = await sb.from('trade_items').insert(items.map(function(o){ return {trade_id:o.trade_id, card_id:o.card_id, owner_id:o.owner_id, qty:o.qty}; }));
+    }
+    if (ins.error || !items.length) {
+        await sb.from('trades').delete().eq('id', tid); // pas d'échange vide
+        toast(ins.error ? errMsg(ins.error) : "Aucune carte valide dans l'offre.");
+        $('tb-send').disabled = false;
+        return;
+    }
+
     toast('Offre envoyée !');
     $('tr-builder').style.display = 'none';
     $('tr-input').value = '';
+    tradeDraft.give = []; tradeDraft.ask = [];
     await loadTrades();
 }
 
