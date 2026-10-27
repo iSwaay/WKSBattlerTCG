@@ -610,3 +610,12 @@ body { padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px)); }
 .mega-badge[hidden]{display:none}
 #pk-stage[data-active="std"] .pk-arr.r.has-gift::after{content:"🎁";position:absolute;top:-6px;right:-2px;font-size:18px;animation:giftbob 1.4s ease-in-out infinite}
 @keyframes giftbob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+
+/* --- Correctif flip : la face arrière ne doit jamais apparaître à travers la face avant ---
+   Certains navigateurs ignorent backface-visibility pour les éléments enfants (texte, médaillon "?").
+   On masque donc aussi la face non visible avec "visibility", au milieu de la rotation. */
+.pkc-back *, .face.back *{backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.pkc-front, .face.front{visibility:hidden}
+.pkc-back, .face.back{visibility:visible}
+.pk-slot.on .pkc-back, .flip.on .face.back{visibility:hidden;transition:visibility 0s linear .32s}
+.pk-slot.on .pkc-front, .flip.on .face.front{visibility:visible;transition:visibility 0s linear .32s}
