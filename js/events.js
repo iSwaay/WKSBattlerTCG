@@ -431,10 +431,13 @@ document.addEventListener('click', async function(e){
             P.tokens = data.total_tokens;
             updateInvUI();
             toast('Code valide ! +' + data.amount + ' Jetons 🪙');
+        } else if (data.type === 'mega_packs') {
+            P.tokens = data.total_tokens;
+            updateInvUI();
+            toast('Code valide ! +' + data.amount + ' Méga Pack' + (data.amount > 1 ? 's' : '') + ' (' + data.tokens_added + ' 🪙 ajoutés) 🎁');
         } else if (data.type === 'packs') {
-            var rf = await sb.rpc('admin_fill_packs');
-            if (!rf.error) { applyState(rf.data); renderPacks(); }
-            toast('Code valide ! Stock de packs rempli 📦');
+            if (data.state){ applyState(data.state); renderPacks(); }
+            toast('Code valide ! +' + data.amount + ' pack' + (data.amount > 1 ? 's' : '') + ' 📦');
         }
         if($('promo-code')) $('promo-code').value = '';
         if(window.audioCtx) sfx('epic');
