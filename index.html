@@ -307,6 +307,7 @@
       <div class="col-head" style="margin-bottom:8px"><h2>Arène</h2></div>
       <div class="sub-tabs" id="arena-tabs">
         <button type="button" class="on" data-arenatab="combat">Combat</button>
+        <button type="button" data-arenatab="heroes">Héros</button>
         <button type="button" data-arenatab="shop">Boutique</button>
         <button type="button" data-arenatab="inventory">Inventaire</button>
       </div>
@@ -315,11 +316,20 @@
           <div class="panel" style="text-align:center;padding:40px 16px;background:var(--surface2);border:2px dashed var(--line)">
             <div style="font-size:48px;margin-bottom:16px">⚔️</div>
             <h3>Choisis ton combattant</h3>
+            <p class="hint" id="arena-hero-line" style="margin:-4px 0 10px;font-weight:600"></p>
             <p class="hint" style="max-width:400px;margin:0 auto 24px">Sélectionne une carte de ta collection pour te représenter dans l'Arène.</p>
             <button class="btn primary" style="font-size:16px;padding:12px 24px" disabled>Rechercher un adversaire (Bientôt)</button>
           </div>
       </div>
       
+      <div id="arena-view-heroes" style="display:none">
+          <div class="heroes-head">
+            <p class="muted" style="margin:0">Choisis ton Héros : il définit tes PV, ton énergie et un style de jeu. Il gagne de l'XP à chaque victoire (niveau 10 max).</p>
+            <span class="heroes-count" id="heroes-count"></span>
+          </div>
+          <div class="hero-grid" id="heroes-grid"></div>
+      </div>
+
       <div id="arena-view-shop" style="display:none">
           <p class="muted" style="margin-top:0;margin-bottom:16px">Achète des objets avec tes jetons 🪙</p>
           <div class="grid">
@@ -381,6 +391,8 @@
         </div>
       </div>
     </div>
+
+    <div class="modal" id="modal-hero" hidden role="dialog" aria-label="Fiche du héros"></div>
 
     <div class="modal" id="modal-select" hidden role="dialog">
       <div class="panel" style="max-height:85vh;display:flex;flex-direction:column;margin-top:5vh">
@@ -444,6 +456,7 @@
 <script src="js/admin.js"></script>
 <script src="js/effects.js"></script>
 <script src="js/social.js"></script>
+<script src="js/heroes.js"></script>
 <script src="js/events.js"></script>
 <script src="js/pack-carousel.js"></script>
 </body>
