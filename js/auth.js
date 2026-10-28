@@ -3,7 +3,7 @@
 
 var authMode = 'login', authEmail = '', authUser = '';
 function renderAuth(msg, err){
-  var el = $('auth'), h = '<div class="panel" style="margin-top:6vh"><div class="panel-h"><h2>Wiki Packs</h2></div>';
+  var el = $('auth'), h = '<div class="panel" style="margin-top:6vh"><div class="panel-h"><h2>WKS TCG</h2></div>';
   if (authMode === 'config'){
     h += '<p class="msg err">Le jeu n\'est pas encore relié à sa base de données.</p>'+
       '<p class="hint">Ouvre <b>index.html</b>, remplace <b>SUPABASE_URL</b> et <b>SUPABASE_KEY</b>.</p>';
@@ -40,13 +40,14 @@ function resetLocal(){
 async function boot(){
   authMode = 'loading'; renderAuth('Chargement de ta partie…');
   try{
-    var pr = await sb.from('profiles').select('username,is_admin,is_owner,showcase,tokens,mega_packs,inventory,active_card').eq('id', U.id).single();
+    var pr = await sb.from('profiles').select('username,is_admin,is_owner,showcase,tokens,mega_packs,inventory,active_card,active_hero').eq('id', U.id).single();
     if (pr.error) throw pr.error;
     P = pr.data;
     await syncState();
     await loadCards();
     await loadCol();
     await loadSocial();
+    try { await loadHeroes(); } catch(he) { console.error('loadHeroes', he); }
     $('auth').hidden = true;
     renderAll();
   }catch(e){

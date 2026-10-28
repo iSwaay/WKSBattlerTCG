@@ -58,6 +58,7 @@ document.addEventListener('click', async function(e){
       document.querySelectorAll('#arena-tabs button').forEach(function(b){ b.classList.toggle('on', b===tabBtn); });
       $('arena-view-combat').style.display = (targetId === 'combat') ? 'block' : 'none';
       $('arena-view-shop').style.display = (targetId === 'shop') ? 'block' : 'none';
+      if($('arena-view-heroes')) $('arena-view-heroes').style.display = (targetId === 'heroes') ? 'block' : 'none';
       if($('arena-view-inventory')) $('arena-view-inventory').style.display = (targetId === 'inventory') ? 'block' : 'none';
       return;
   }
