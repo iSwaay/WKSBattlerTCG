@@ -59,6 +59,8 @@ document.addEventListener('click', async function(e){
       $('arena-view-combat').style.display = (targetId === 'combat') ? 'block' : 'none';
       $('arena-view-shop').style.display = (targetId === 'shop') ? 'block' : 'none';
       if($('arena-view-heroes')) $('arena-view-heroes').style.display = (targetId === 'heroes') ? 'block' : 'none';
+      if($('arena-view-decks')) $('arena-view-decks').style.display = (targetId === 'decks') ? 'block' : 'none';
+      if (targetId === 'decks') { loadDecks().catch(function(err){ console.error('loadDecks', err); }); }
       if($('arena-view-inventory')) $('arena-view-inventory').style.display = (targetId === 'inventory') ? 'block' : 'none';
       return;
   }
