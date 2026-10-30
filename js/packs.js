@@ -25,11 +25,10 @@ async function loadCol(){
   window.myInstances = r.data.map(function(inst) {
       col[inst.card_id] = (col[inst.card_id] || 0) + 1;
       var flatSkills = [];
-      if (inst.card_instance_skills) {
-          inst.card_instance_skills.forEach(function(cis) {
-              if (cis.skills) flatSkills.push(cis.skills);
-          });
-      }
+      var cisList = inst.card_instance_skills ? [].concat(inst.card_instance_skills) : [];
+      cisList.forEach(function(cis) {
+          if (cis && cis.skills) flatSkills.push(cis.skills);
+      });
       return { 
           instance_id: inst.instance_id, 
           card_id: inst.card_id, 

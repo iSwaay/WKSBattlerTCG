@@ -87,7 +87,7 @@ function heroModalHTML(h) {
         '<p class="hm-arch">' + esc(h.archetype) + '</p>' +
         '<div class="hm-stats"><div><b>' + hpTxt + '</b><span>Santé</span></div>' +
           '<div><b>' + h.energy_cap + '</b><span>Énergie max</span></div>' +
-          '<div><b>' + h.field_slots + '</b><span>Slots / ligne</span></div></div>' +
+          '<div><b>' + h.field_slots + '</b><span>Emplacements</span></div></div>' +
         '<div class="hm-perk good"><b>Avantage</b><span>' + esc(h.advantage) + '</span></div>' +
         '<div class="hm-perk bad"><b>Contrepartie</b><span>' + esc(h.drawback) + '</span></div>' +
         '<div class="hm-perk star"><b>Niveau ' + pr.max + '</b><span>' + esc(h.lvl10_bonus) + '</span></div>' +

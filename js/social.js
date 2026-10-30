@@ -96,9 +96,8 @@ async function searchTradeUser(username) {
         tInstances = r.data.map(function(inst) {
             tCol[inst.card_id] = (tCol[inst.card_id] || 0) + 1;
             var flatSkills = [];
-            if (inst.card_instance_skills) {
-                inst.card_instance_skills.forEach(function(cis) { if (cis.skills) flatSkills.push(cis.skills); });
-            }
+            var cisList = inst.card_instance_skills ? [].concat(inst.card_instance_skills) : [];
+            cisList.forEach(function(cis) { if (cis && cis.skills) flatSkills.push(cis.skills); });
             return { instance_id: inst.instance_id, card_id: inst.card_id, hp: inst.hp, attack: inst.attack, defense: inst.defense, skills: flatSkills };
         });
     }
