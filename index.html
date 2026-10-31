@@ -314,13 +314,39 @@
       </div>
 
       <div id="arena-view-combat">
-          <div class="panel" style="text-align:center;padding:40px 16px;background:var(--surface2);border:2px dashed var(--line)">
-            <div style="font-size:48px;margin-bottom:16px">⚔️</div>
-            <h3>Choisis ton combattant</h3>
-            <p class="hint" id="arena-hero-line" style="margin:-4px 0 10px;font-weight:600"></p>
-            <p class="hint" style="max-width:400px;margin:0 auto 24px">Prépare un deck de 20 cartes et choisis ton héros pour entrer dans l'Arène.</p>
-            <button class="btn primary" style="font-size:16px;padding:12px 24px" disabled>Rechercher un adversaire (Bientôt)</button>
+        <div id="bt-menu">
+          <p class="hint" id="arena-hero-line" style="margin:0 0 12px;font-weight:600"></p>
+          <div class="bt-modes">
+            <div class="bt-mode">
+              <div class="bt-mode-ico">🎯</div>
+              <h3>Camp d'entraînement</h3>
+              <p>Affronte un bot, sans enjeu de classement. Ton héros gagne de l'XP à chaque victoire.</p>
+              <label class="bt-lbl" for="bt-deck">Deck</label>
+              <select id="bt-deck" class="bt-sel"></select>
+              <label class="bt-lbl" for="bt-diff">Difficulté</label>
+              <select id="bt-diff" class="bt-sel">
+                <option value="easy">Facile</option>
+                <option value="normal" selected>Normal</option>
+                <option value="hard">Difficile</option>
+              </select>
+              <button type="button" class="btn primary" id="bt-start">Lancer l'entraînement</button>
+              <p class="hint" id="bt-resume" style="margin:8px 0 0" hidden></p>
+            </div>
+            <div class="bt-mode bt-soon">
+              <div class="bt-mode-ico">🛡️</div>
+              <h3>Duel</h3>
+              <p>Affronte le deck d'un autre joueur, sans qu'il ait besoin d'être connecté.</p>
+              <button type="button" class="btn" disabled>Bientôt disponible</button>
+            </div>
+            <div class="bt-mode bt-soon">
+              <div class="bt-mode-ico">🏟️</div>
+              <h3>Arène</h3>
+              <p>Combat en direct contre un autre joueur, avec chrono de préparation synchronisé.</p>
+              <button type="button" class="btn" disabled>Bientôt disponible</button>
+            </div>
           </div>
+        </div>
+        <div id="bt-game" hidden></div>
       </div>
       
       <div id="arena-view-decks" style="display:none">
@@ -469,6 +495,7 @@
 <script src="js/social.js"></script>
 <script src="js/heroes.js"></script>
 <script src="js/decks.js"></script>
+<script src="js/battle.js"></script>
 <script src="js/events.js"></script>
 <script src="js/pack-carousel.js"></script>
 </body>

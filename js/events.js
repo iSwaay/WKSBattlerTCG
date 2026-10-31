@@ -60,6 +60,7 @@ document.addEventListener('click', async function(e){
       $('arena-view-shop').style.display = (targetId === 'shop') ? 'block' : 'none';
       if($('arena-view-heroes')) $('arena-view-heroes').style.display = (targetId === 'heroes') ? 'block' : 'none';
       if($('arena-view-decks')) $('arena-view-decks').style.display = (targetId === 'decks') ? 'block' : 'none';
+      if (targetId === 'combat' && typeof btRefreshMenu === 'function' && $('bt-game') && $('bt-game').hidden) { loadDecks().then(btRefreshMenu).catch(function(err){ console.error('btRefreshMenu', err); }); }
       if (targetId === 'decks') { loadDecks().catch(function(err){ console.error('loadDecks', err); }); }
       if($('arena-view-inventory')) $('arena-view-inventory').style.display = (targetId === 'inventory') ? 'block' : 'none';
       return;

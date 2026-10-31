@@ -12,7 +12,7 @@ La partie est une suite de **manches**, jouées en même temps par les deux joue
 
 ### Phase de préparation (chaque manche)
 1. **Énergie** : la jauge max augmente de 1 par manche (départ 1, plafond 10 par défaut, modifié par le héros) et se remplit au début de la manche.
-2. **Pioche** : 3 cartes du deck sont proposées. On en pose 1 ou plusieurs en payant leur **coût en énergie** (= `energy_cost` du skill). Les cartes non choisies retournent dans la pioche.
+2. **Pioche** : 3 cartes du deck sont proposées. On en pose 1 ou plusieurs en payant leur **coût en énergie** (= `energy_cost` du skill). Les cartes non choisies retournent dans la pioche (qui repose toujours sur les 20 cartes du deck).
 3. **Relance** : on peut relancer les 3 choix en payant de l'énergie (`reroll_cost`).
 4. **Étoiles** : on peut payer de l'énergie pour passer une carte à l'étoile suivante (`star_levels.upgrade_cost`).
 5. **Plateau** : 5 emplacements maximum — **2 à gauche, 1 au centre, 2 à droite**.
@@ -55,9 +55,18 @@ Colonnes principales de `skills` :
 | `cooldown`, `uses_per_combat` | attaques minimum entre deux déclenchements, nombre d'usages max |
 | `extra` | règles spéciales : `range` [min,max] (valeur aléatoire), `max_stacks`, `cond`, `execute_below_pct`, `revive`, `cleanse`, `swap_atk_def`, `negate_next_hit`, `free_reroll` |
 
-## 5. Points à trancher
-1. **Fusion** : trois exemplaires d'une même carte ont des skills différents (règle des decks). Proposition : la carte fusionnée garde le skill de rareté la plus haute (égalité : le premier posé).
-2. **Déplacement** : peut-on échanger les cartes de place pendant la préparation ? Proposition : oui, gratuitement.
-3. **Cartes proposées non choisies** : retour dans la pioche (proposé) ou défausse.
-4. **Chrono de préparation** : durée à définir (30 s ?) ; à zéro, la manche démarre.
-5. **Contrecoups des héros** (Furieux, etc.) exprimés en % des PV max de la carte pour rester proportionnels.
+## 5. Décisions validées
+1. **Fusion** : quand 3 exemplaires d'une même carte fusionnent, le joueur **choisit** le skill à garder parmi les 3.
+2. **Déplacement** : les cartes se déplacent **librement et gratuitement** pendant la préparation.
+3. **Cartes proposées non choisies** : elles **retournent dans la pioche**. La pioche repose toujours sur les 20 cartes du deck : les cartes posées sur la table ne sont jamais retirées du tirage.
+4. **Chrono de préparation** : **30 secondes** ; à zéro, la manche démarre.
+
+## 6. À confirmer
+- **Contrecoups des héros** (Furieux, etc.) exprimés en % des PV max de la carte pour rester proportionnels.
+
+## 7. Modes de jeu
+- **Camp d'entraînement** (disponible) : partie contre un bot (facile / normal / difficile). Le héros gagne de l'XP à chaque victoire.
+- **Duel** (menu prêt, bientôt) : PvP asynchrone contre le deck d'un autre joueur.
+- **Arène** (menu prêt, bientôt) : PvP en direct, chrono de préparation synchronisé.
+
+Architecture : tout le jeu tourne sur le serveur (edge function `match`, moteur dans `server/engine.js`) ; la partie est stockée dans la table `matches` (inaccessible depuis le navigateur). Le site (`js/battle.js`) n'envoie que des actions (poser, relancer, monter d'étoile, déplacer, prêt) et affiche l'état reçu.

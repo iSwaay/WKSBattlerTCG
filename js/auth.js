@@ -49,6 +49,7 @@ async function boot(){
     await loadSocial();
     try { await loadHeroes(); } catch(he) { console.error('loadHeroes', he); }
     try { await loadDecks(); } catch(de) { console.error('loadDecks', de); }
+    try { await btRefreshMenu(); } catch(be) { console.error('btRefreshMenu', be); }
     $('auth').hidden = true;
     renderAll();
   }catch(e){
