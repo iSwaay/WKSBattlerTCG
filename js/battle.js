@@ -114,6 +114,22 @@ function btOffCardHTML(o, energy) {
 }
 
 /* ---------- rendu principal (préparation) ---------- */
+function btItemCount() { var inv = (typeof P !== 'undefined' && P.inventory) || {}; return (inv.potion_soin || 0) + (inv.potion_energie || 0); }
+
+/* Bandeau d'un camp : bouton d'objets (gauche), héros (centre), objets utilisés pendant le combat (droite) */
+function btSideHTML(h, who) {
+  var def = heroById(h.id), pct = Math.max(0, Math.min(100, Math.round(h.hp / h.max_hp * 100)));
+  var item = who === 'me'
+    ? '<button type="button" class="bt-itembtn" id="bt-items" title="Utiliser un objet"><span>🧪</span><small>' + btItemCount() + '</small></button>'
+    : '<span class="bt-itembtn off" title="Objets de l\'adversaire"><span>🧪</span></span>';
+  return '<div class="bt-side bt-side-' + who + '">' + item +
+    '<div class="bt-hcenter"><span class="bt-hportrait">' + (def && def.image ? '<img src="' + esc(def.image) + '" alt="" draggable="false">' : '') +
+      '<b class="bt-heart" data-hhp="' + who + '">' + Math.max(0, h.hp) + '</b></span>' +
+      '<span class="bt-hname">' + esc(h.name) + ' <small>niv. ' + h.level + '</small></span>' +
+      '<span class="bt-hhp"><i style="width:' + pct + '%"></i></span></div>' +
+    '<div class="bt-used" data-used="' + who + '"><span class="bt-usedslot"></span><span class="bt-usedslot"></span><span class="bt-usedslot"></span><span class="bt-usedslot"></span></div></div>';
+}
+
 function btHeroBar(h, who) {
   var def = heroById(h.id), pct = Math.max(0, Math.min(100, Math.round(h.hp / h.max_hp * 100)));
   return '<div class="bt-hero bt-hero-' + who + '"><span class="bt-hav">' + (def ? '<img src="' + esc(def.image) + '" alt="" draggable="false">' : '') + '</span>' +
@@ -121,8 +137,11 @@ function btHeroBar(h, who) {
     '<span class="bt-hhp"><i style="width:' + pct + '%"></i></span><em>' + Math.max(0, h.hp) + ' / ' + h.max_hp + ' PV</em></span></div>';
 }
 
-function btLanes(cellsArr) {
-  return '<div class="bt-lanes"><div class="bt-lane l2">' + cellsArr[0] + cellsArr[1] + '</div><div class="bt-lane l1">' + cellsArr[2] + '</div><div class="bt-lane l2">' + cellsArr[3] + cellsArr[4] + '</div></div>';
+function btLanes(c, side) {
+  /* c = [L1, L2, C1, R1, R2]. Colonnes : gauche (2), milieu (1), droite (2).
+     Rangée avant = L1/R1 (près du centre de la table), arrière = L2/R2. L'ennemi est en haut : sa rangée arrière est donc au-dessus. */
+  var L = side === 'bot' ? c[1] + c[0] : c[0] + c[1], R = side === 'bot' ? c[4] + c[3] : c[3] + c[4];
+  return '<div class="bt-cols"><div class="bt-col">' + L + '</div><div class="bt-col mid">' + c[2] + '</div><div class="bt-col">' + R + '</div></div>';
 }
 
 function btBoardCells(side, v) {
@@ -161,11 +180,13 @@ function btRender() {
     '<div class="bt-bar"><button type="button" class="btn sm" id="bt-quit">Abandonner</button>' +
       '<span class="bt-round">Manche <b>' + v.round + '</b></span>' +
       '<span class="bt-timer" id="bt-timer">—</span></div>' +
-    btHeroBar(v.bot.hero, 'bot') +
-    '<div class="bt-board bt-board-bot" id="bt-board-bot">' + btLanes(btBoardCells('bot', v)) + '</div>' +
-    '<div class="bt-vs">⚔ <span>face à face — mêmes couloirs</span></div>' +
-    '<div class="bt-board bt-board-me" id="bt-board-me">' + btLanes(btBoardCells('me', v)) + '</div>' +
-    btHeroBar(v.me.hero, 'me') +
+    btSideHTML(v.bot.hero, 'bot') +
+    '<div class="bt-table">' +
+      '<div class="bt-board bt-board-bot" id="bt-board-bot">' + btLanes(btBoardCells('bot', v), 'bot') + '</div>' +
+      '<div class="bt-vs"><i></i><span>⚔</span><i></i></div>' +
+      '<div class="bt-board bt-board-me" id="bt-board-me">' + btLanes(btBoardCells('me', v), 'me') + '</div>' +
+    '</div>' +
+    btSideHTML(v.me.hero, 'me') +
     '<div class="bt-energy"><span class="bt-en"><b>⚡ ' + v.me.energy + '</b> / ' + v.me.max_energy + '</span>' +
       '<button type="button" class="btn sm" id="bt-reroll">Relancer (' + v.me.reroll_cost + ' ⚡)</button>' +
       '<button type="button" class="btn primary" id="bt-ready">Prêt ▶</button></div>' +
@@ -239,11 +260,29 @@ function btApplySnap(snap) {
     el.classList.toggle('dead', !!s.x);
   });
 }
+/* La carte attaquante charge vers sa cible : recul, élan, impact, retour */
+function btAttack(aId, dId, ms) {
+  var A = btUnitEl(aId), D = btUnitEl(dId); if (!A || !D || !A.animate) return;
+  var ra = A.getBoundingClientRect(), rd = D.getBoundingClientRect();
+  var dx = (rd.left + rd.width / 2) - (ra.left + ra.width / 2), dy = (rd.top + rd.height / 2) - (ra.top + ra.height / 2);
+  A.style.zIndex = 40; A.classList.add('charging');
+  var an = A.animate([
+    { transform: 'translate(0,0) scale(1) rotate(0deg)', offset: 0 },
+    { transform: 'translate(' + (-dx * 0.07) + 'px,' + (-dy * 0.07) + 'px) scale(1.06) rotate(' + (dx < 0 ? 3 : -3) + 'deg)', offset: 0.22, easing: 'ease-in' },
+    { transform: 'translate(' + (dx * 0.82) + 'px,' + (dy * 0.82) + 'px) scale(1.18) rotate(' + (dx < 0 ? -5 : 5) + 'deg)', offset: 0.5, easing: 'ease-out' },
+    { transform: 'translate(0,0) scale(1) rotate(0deg)', offset: 1 }
+  ], { duration: Math.max(120, ms), easing: 'ease-in-out' });
+  an.onfinish = an.oncancel = function(){ A.style.zIndex = ''; A.classList.remove('charging'); };
+}
+function btSlash(el) {
+  var f = document.createElement('span'); f.className = 'bt-slash'; el.appendChild(f);
+  setTimeout(function(){ if (f.parentNode) f.parentNode.removeChild(f); }, 420);
+}
+
 function btEvent(e) {
   var cls;
   switch (e.k) {
-    case 'atk': { var el = btUnitEl(e.a); if (el) { var dir = e.a.indexOf('me.') === 0 ? 'lunge-up' : 'lunge-down'; el.classList.add(dir); setTimeout(function(){ el.classList.remove(dir); }, 260); } break; }
-    case 'dmg': btFloat(e.u, '-' + e.d, 'dmg'); { var t = btUnitEl(e.u); if (t) { t.classList.add('hit'); setTimeout(function(){ t.classList.remove('hit'); }, 260); } } break;
+    case 'dmg': btFloat(e.u, '-' + e.d, 'dmg'); { var t = btUnitEl(e.u); if (t) { t.classList.add('hit'); setTimeout(function(){ t.classList.remove('hit'); }, 260); if (e.a) btSlash(t); } } break;
     case 'dot': case 'reflect': case 'bleed': case 'self': btFloat(e.u, '-' + e.d, 'dot'); break;
     case 'heal': btFloat(e.u, '+' + e.d, 'heal'); break;
     case 'shield': btFloat(e.u, '🛡 +' + e.d, 'shield'); break;
@@ -275,20 +314,35 @@ async function btReplay(v, reward) {
   g.innerHTML =
     '<div class="bt-bar"><span class="bt-round">Combat — manche <b>' + rd + '</b></span>' +
       '<span class="bt-speed"><button type="button" class="btn sm" id="bt-spd">×' + BT.speed + '</button> <button type="button" class="btn sm" id="bt-skip">Passer ⏭</button></span></div>' +
-    '<div class="bt-heroes-replay">' + btHeroBar(pv ? pv.bot.hero : v.bot.hero, 'bot') + '</div>' +
-    '<div class="bt-board bt-board-bot">' + btLanes(cellsBot) + '</div>' +
-    '<div class="bt-vs">⚔</div>' +
-    '<div class="bt-board bt-board-me">' + btLanes(cellsMe) + '</div>' +
-    '<div class="bt-heroes-replay">' + btHeroBar(pv ? pv.me.hero : v.me.hero, 'me') + '</div>' +
+    btSideHTML(pv ? pv.bot.hero : v.bot.hero, 'bot') +
+    '<div class="bt-table">' +
+      '<div class="bt-board bt-board-bot">' + btLanes(cellsBot, 'bot') + '</div>' +
+      '<div class="bt-vs"><i></i><span>⚔</span><i></i></div>' +
+      '<div class="bt-board bt-board-me">' + btLanes(cellsMe, 'me') + '</div>' +
+    '</div>' +
+    btSideHTML(pv ? pv.me.hero : v.me.hero, 'me') +
     '<div class="bt-banner" id="bt-banner" hidden></div>';
   BT.skip = false;
-  await btSleep(500 / BT.speed);
+  // rythme : l'animation doit tenir dans le temps de revue laissé par le serveur (sinon on perd du temps de préparation)
+  var nAtk = 0, nOther = 0;
+  last.ticks.forEach(function(tk){ tk.ev.forEach(function(e){ if (e.k === 'atk') nAtk++; else nOther++; }); });
+  var est = nAtk * 430 + nOther * 70 + last.ticks.length * 220 + 500;
+  var budget = Math.max(3000, (v.prep_start || 0) - btNow() - 2400);
+  BT.auto = Math.max(1, Math.min(4, est / budget));
+  var sp = function(){ return BT.speed * BT.auto; };
+  await btSleep(500 / sp());
   for (var i = 0; i < last.ticks.length && !BT.skip; i++) {
-    var tk = last.ticks[i], evs = tk.ev, n = evs.length;
-    var gap = n ? Math.min(170, 800 / n) : 0;
-    for (var j = 0; j < n && !BT.skip; j++) { btEvent(evs[j]); await btSleep(gap / BT.speed); }
+    var tk = last.ticks[i], evs = tk.ev, tail = 0;
+    for (var j = 0; j < evs.length && !BT.skip; j++) {
+      var e = evs[j];
+      if (e.k === 'atk') {
+        if (tail > 0) { await btSleep(tail / sp()); tail = 0; }
+        btAttack(e.a, e.d, 430 / sp()); await btSleep(215 / sp()); tail = 215;
+      } else { btEvent(e); await btSleep(70 / sp()); }
+    }
+    if (tail > 0 && !BT.skip) await btSleep(tail / sp());
     btApplySnap(tk.snap);
-    await btSleep(260 / BT.speed);
+    await btSleep(220 / sp());
   }
   if (BT.skip && last.ticks.length) btApplySnap(last.ticks[last.ticks.length - 1].snap);
   // bannière de résultat
@@ -298,6 +352,11 @@ async function btReplay(v, reward) {
     ban.hidden = false;
     ban.innerHTML = '<b>' + txt + '</b><span>Ton héros : −' + (last.loss.me || 0) + ' PV · Adversaire : −' + (last.loss.bot || 0) + ' PV</span>';
   }
+  ['me', 'bot'].forEach(function(w){
+    var h = document.querySelector('[data-hhp="' + w + '"]'), bar = document.querySelector('.bt-side-' + w + ' .bt-hhp i'), hero = v[w].hero;
+    if (h) { h.textContent = Math.max(0, hero.hp); h.classList.add('pulse'); }
+    if (bar) bar.style.width = Math.max(0, Math.min(100, hero.hp / hero.max_hp * 100)) + '%';
+  });
   await btSleep(BT.skip ? 700 : 1700);
   BT.replaying = false; BT.sel = null;
   if (v.status === 'over') { BT.v = v; BT.reward = reward; btRenderOver(); return; }
@@ -335,6 +394,7 @@ document.addEventListener('click', function(e) {
     btCall({ action: 'forfeit', match_id: BT.id }).then(function(){ BT.id = null; BT.v = null; BT.active = null; if (BT.timer) clearInterval(BT.timer); btShow(false); btRefreshMenu(); });
     return;
   }
+  if (t.closest('#bt-items')) { toast('Les objets utilisables en combat arrivent bientôt.'); return; }
   if (t.closest('#bt-ready')) { btReady(false); return; }
   if (t.closest('#bt-reroll')) { btAct({ t: 'reroll' }); return; }
   if (t.closest('#bt-up')) { if (BT.sel && BT.sel.t === 'board') btAct({ t: 'upgrade', slot: BT.sel.slot }); return; }
