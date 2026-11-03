@@ -70,3 +70,6 @@ Colonnes principales de `skills` :
 - **Arène** (menu prêt, bientôt) : PvP en direct, chrono de préparation synchronisé.
 
 Architecture : tout le jeu tourne sur le serveur (edge function `match`, moteur dans `server/engine.js`) ; la partie est stockée dans la table `matches` (inaccessible depuis le navigateur). Le site (`js/battle.js`) n'envoie que des actions (poser, relancer, monter d'étoile, déplacer, prêt) et affiche l'état reçu.
+
+## 8. Pioche et énergie de départ
+Tu démarres avec 1 ⚡ (+1 par manche). Pour éviter les manches où rien ne peut être posé, la pioche de 3 cartes contient toujours au moins une carte jouable avec l'énergie du moment, si ton deck en contient une. L'éditeur de decks affiche la courbe de coûts et prévient quand il y a moins de 4 cartes à 0-1 ⚡.

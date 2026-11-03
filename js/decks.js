@@ -110,6 +110,7 @@ function dkOpen(deckId) {
         '<button type="button" class="btn sm" id="dk-cancel">Fermer</button>' +
       '</div>' +
       '<div class="dke-slots" id="dk-slots"></div>' +
+      '<div class="dke-curve" id="dk-curve"></div>' +
       '<div class="dke-tools">' +
         '<input type="text" id="dk-search" class="search-input" placeholder="Rechercher (carte, skill)…" autocomplete="off">' +
         '<select id="dk-sort" aria-label="Trier">' + DK_SORTS.map(function(o){ return '<option value="' + o[0] + '">' + o[1] + '</option>'; }).join('') + '</select>' +
@@ -149,6 +150,13 @@ function dkRenderSlots() {
   }
   box.innerHTML = html;
   var n = dk.ids.length, c = $('dk-count');
+  var cv = $('dk-curve');
+  if (cv) {
+    var b = [0, 0, 0, 0], tot = 0;
+    dk.ids.forEach(function(id){ var i = im[id], sk = i && i.skills && i.skills[0]; if (!sk) return; var e = sk.energy_cost || 0; b[e <= 1 ? 0 : e === 2 ? 1 : e === 3 ? 2 : 3]++; tot++; });
+    cv.innerHTML = tot ? '⚡ Coût des cartes : <b>0-1</b> × ' + b[0] + ' · <b>2</b> × ' + b[1] + ' · <b>3</b> × ' + b[2] + ' · <b>4+</b> × ' + b[3] +
+      (b[0] < 4 ? ' <span class="dke-warn">Peu de cartes à 0-1 ⚡ : tu risques de ne rien pouvoir jouer aux premières manches (tu démarres avec 1 ⚡).</span>' : '') : '';
+  }
   if (c) { c.textContent = n + ' / ' + DECK_SIZE; c.className = 'dke-count' + (n === DECK_SIZE ? ' ok' : ''); }
   var s = $('dk-save'); if (s) s.textContent = n === DECK_SIZE ? 'Enregistrer le deck' : 'Enregistrer (brouillon ' + n + '/' + DECK_SIZE + ')';
 }

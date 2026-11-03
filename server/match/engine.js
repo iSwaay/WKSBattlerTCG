@@ -74,12 +74,22 @@ export function allowedSlots(side) {
 }
 function drawOffer(st, cfg, sd) {
   const side = st[sd], fx = side.hero.fx;
-  const picks = shuffle(st.R, side.deck.map((_, i) => i)).slice(0, cfg.offer_size);
-  side.offer = picks.map((i) => {
+  const mk = (i) => {
     const c = side.deck[i];
     return { ...c, tf: rnd(st.R) * 100 < (fx.cancel_cost_increase_chance_pct || fx.ignore_tax_chance_pct || fx.ignore_cost_increase_chance_pct || 0),
       f3: rnd(st.R) * 100 < (fx.expensive_cost_forced_to_3_chance_pct || 0) };
-  });
+  };
+  const order = shuffle(st.R, side.deck.map((_, i) => i));
+  const offer = order.slice(0, cfg.offer_size).map(mk);
+  // au moins une carte jouable avec l'énergie disponible (si le deck en contient une) : évite les manches où rien ne peut être posé
+  const afford = (c) => cardCost(side, c) <= side.energy;
+  if (!offer.some(afford)) {
+    for (const i of order.slice(cfg.offer_size)) {
+      const c = mk(i);
+      if (afford(c)) { offer[Math.floor(rnd(st.R) * offer.length)] = c; break; }
+    }
+  }
+  side.offer = offer;
 }
 export function cardCost(side, c) {
   const fx = side.hero.fx, sk = c.skill; let cost = sk.cost;

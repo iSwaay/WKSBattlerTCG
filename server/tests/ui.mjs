@@ -29,16 +29,27 @@ const server = (body) => {
     return { ok: !r.error, error: r.error || null, match_id:'m1', now, view: v, reward: match.status === 'over' && match.winner === 'me' ? { xp:100, hero_xp:100, level:2, level_before:1 } : null };
   }
 };
+import http from 'http'; import path from 'path';
 const html = fs.readFileSync(root + 'index.html', 'utf8');
+const mime = { '.png': 'image/png', '.css': 'text/css', '.js': 'text/javascript', '.html': 'text/html', '.webp': 'image/webp' };
+let pageHtml = '';
+const srv = http.createServer((req, res) => {
+  const u = decodeURIComponent(req.url.split('?')[0]);
+  if (u === '/__test.html') { res.setHeader('content-type', 'text/html'); return res.end(pageHtml); }
+  const f = path.join(root, u); if (!f.startsWith(root) || !fs.existsSync(f)) { res.statusCode = 404; return res.end(); }
+  res.setHeader('content-type', mime[path.extname(f)] || 'application/octet-stream'); res.end(fs.readFileSync(f));
+}).listen(0);
+const PORT = srv.address().port;
 const combat = html.slice(html.indexOf('<div id="arena-view-combat">'), html.indexOf('<div id="arena-view-decks"'));
-const page_html = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${fs.readFileSync(root + "css/styles.css", "utf8")}</style></head><body><div class="wrap" style="padding:12px"><div id="app">${combat}</div></div></body></html>`;
+const page_html = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/css/styles.css"><link rel="stylesheet" href="/css/battle.css"></head><body><div class="wrap" style="padding:12px"><div id="app">${combat}</div></div></body></html>`;
+pageHtml = page_html;
 const browser = await chromium.launch();
-for (const [name, w, h] of [['desktop', 900, 1100], ['mobile', 390, 900]]) {
+for (const [name, w, h] of [['desktop', 1280, 900], ['mobile', 390, 900]]) {
   match = null;
   const page = await browser.newPage({ viewport: { width: w, height: h } });
   const errors = []; page.on('pageerror', (e) => errors.push(e.message)); page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
   await page.exposeFunction('__srv', (b) => JSON.stringify(server(b)));
-  await page.setContent(page_html);
+  await page.goto(`http://localhost:${PORT}/__test.html`);
   await page.evaluate(() => {
     window.$ = (id) => document.getElementById(id);
     window.esc = (s) => String(s).replace(/[&<>"']/g, (m) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
@@ -51,11 +62,12 @@ for (const [name, w, h] of [['desktop', 900, 1100], ['mobile', 390, 900]]) {
     window.sb = { functions: { invoke: async (n, o) => ({ data: JSON.parse(await window.__srv(o.body)) }) } };
     window.confirm = () => true;
   });
+  await page.addScriptTag({ path: root + 'js/battle-art.js' });
   await page.addScriptTag({ path: root + 'js/battle.js' });
   await page.evaluate(() => btRefreshMenu());
   await page.screenshot({ path: `/tmp/bt/${name}-menu.png` });
   await page.click('#bt-start'); await page.waitForSelector('.bt-offers .bt-off');
-  await page.screenshot({ path: `/tmp/bt/${name}-prep1.png` });
+  await page.waitForTimeout(1000); await page.screenshot({ path: `/tmp/bt/${name}-prep1.png` });
   // acheter les cartes abordables sur les emplacements libres
   for (let k = 0; k < 4; k++) {
     const offs = await page.$$('.bt-off:not(.bt-off-no)'); if (!offs.length) break;
@@ -64,9 +76,10 @@ for (const [name, w, h] of [['desktop', 900, 1100], ['mobile', 390, 900]]) {
     await cell.click(); await page.waitForTimeout(150);
   }
   await page.screenshot({ path: `/tmp/bt/${name}-prep2.png` });
+  const full = await page.$('.bt-board-me .bt-cell.full'); if (full) { await full.click(); await page.waitForTimeout(200); await page.screenshot({ path: `/tmp/bt/${name}-sel.png` }); await page.click('[data-close]'); }
   // 3 manches
   for (let r = 0; r < 3; r++) {
-    await page.click('#bt-ready'); await page.waitForSelector('#bt-skip'); await page.waitForTimeout(700);
+    await page.click('#bt-ready'); if (r === 0) { await page.waitForTimeout(260); await page.screenshot({ path: `/tmp/bt/${name}-trans.png` }); } await page.waitForSelector('#bt-skip'); await page.waitForTimeout(700);
     if (r === 0) await page.screenshot({ path: `/tmp/bt/${name}-combat.png` });
     await page.click('#bt-skip'); await page.waitForSelector('#bt-banner:not([hidden])');
     await page.waitForSelector('.bt-offers .bt-off, .bt-over', { timeout: 8000 });
@@ -86,4 +99,4 @@ for (const [name, w, h] of [['desktop', 900, 1100], ['mobile', 390, 900]]) {
   console.log(name, { errors, over: !!(await page.$('.bt-over')), toasts: await page.evaluate(() => window.__toasts || []), actions: log.length });
   await page.close();
 }
-await browser.close();
+await browser.close(); srv.close();
