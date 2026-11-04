@@ -323,7 +323,7 @@ function showZoom(c, inst, nav){
   var isPinned = (P.showcase || []).includes(c.id);
   var pinBtn = (col[c.id] > 0) ? '<button type="button" class="btn" id="st-pin" data-id="'+c.id+'">'+(isPinned ? 'Retirer de la vitrine' : 'Mettre en vitrine')+'</button>' : '';
   var mine = inst && inst.instance_id && (window.myInstances || []).some(function(i){ return i.instance_id === inst.instance_id; });
-  var rcBtn = mine ? '<button type="button" class="btn danger" id="st-recycle" data-inst="'+inst.instance_id+'">♻ Recycler (+1 jeton)</button>' : '';
+  var rcBtn = mine ? '<button type="button" class="btn danger" id="st-recycle" data-inst="'+inst.instance_id+'">♻ Recycler (+'+jetons(recycleGain([inst.instance_id]))+')</button>' : '';
   var prev = '', next = '', info = '';
   if (curNav){
     var n = curNav.list.length, i = curNav.i;

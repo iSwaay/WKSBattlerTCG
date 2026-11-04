@@ -125,6 +125,10 @@ function reshowZoom(id){
 })();
 
 /* ---------- recyclage ---------- */
+/* jetons gagnés par rareté (miroir de game_config.recycle_value, appliqué côté serveur) */
+var RECYCLE_VALUE = { C: 1, R: 3, E: 5, L: 25 };
+function recycleGain(ids){ return ids.reduce(function(t, id){ return t + (RECYCLE_VALUE[instRarity(id)] || 1); }, 0); }
+function jetons(n){ return n + ' jeton' + (n > 1 ? 's' : ''); }
 var recycleMode = false, recycleSel = {}, recycling = false, pendingRecycle = [];
 function updateRecycleBar(){
   var bar = $('rc-bar'); if (!bar) return;
@@ -132,7 +136,7 @@ function updateRecycleBar(){
   bar.hidden = !recycleMode;
   if ($('btn-recycle')) $('btn-recycle').classList.toggle('on', recycleMode);
   $('rc-count').textContent = n + ' carte' + (n > 1 ? 's' : '') + ' sélectionnée' + (n > 1 ? 's' : '');
-  $('rc-gain').textContent = '+' + n + ' jeton' + (n > 1 ? 's' : '');
+  $('rc-gain').textContent = '+' + jetons(recycleGain(Object.keys(recycleSel)));
   $('rc-go').disabled = n === 0;
 }
 function setRecycleMode(on){
@@ -153,7 +157,7 @@ function requestRecycle(ids){
   if (nRare > 0){
     pendingRecycle = ids.slice();
     $('rc-text').innerHTML = 'Tu es sur le point de recycler <b>' + ids.length + ' carte' + (ids.length > 1 ? 's' : '') + '</b>' +
-      ', dont <b>' + nRare + ' carte' + (nRare > 1 ? 's' : '') + ' Épique(s) ou Légendaire(s)</b>, contre <b>' + ids.length + ' jeton' + (ids.length > 1 ? 's' : '') + '</b>. ' +
+      ', dont <b>' + nRare + ' carte' + (nRare > 1 ? 's' : '') + ' Épique(s) ou Légendaire(s)</b>, contre <b>' + jetons(recycleGain(ids)) + '</b>. ' +
       'Cette action est définitive.';
     $('modal-recycle').hidden = false;
     $('rc-cancel').focus();
@@ -172,7 +176,8 @@ async function doRecycle(ids){
     P.tokens = r.data.tokens;
     if (Array.isArray(r.data.showcase)) P.showcase = r.data.showcase;
     var n = r.data.recycled || ids.length;
-    toast(n + ' carte' + (n > 1 ? 's recyclées' : ' recyclée') + ' : +' + n + ' jeton' + (n > 1 ? 's' : '') + ' !');
+    var g = r.data.gained != null ? r.data.gained : n;
+    toast(n + ' carte' + (n > 1 ? 's recyclées' : ' recyclée') + ' : +' + jetons(g) + ' !');
     if (window.audioCtx) sfx('flip');
     ok = true;
   }catch(e){
