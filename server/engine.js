@@ -113,12 +113,13 @@ function startRound(st, cfg, now, reviewMs) {
     s.free_rerolls = 0; s.first_bought = false; s.first_attack_bought = false; s.pending = null;
     drawOffer(st, cfg, sd);
   }
+  st.ready = { me: false, bot: false };
   st.status = 'prep'; st.prep_start = now + reviewMs; st.deadline = now + reviewMs + cfg.prep_seconds * 1000;
 }
 
 /* ---------- création d'une partie ---------- */
-export function newMatch(cfg, { seed, now, me, bot, difficulty }) {
-  const st = { v: 1, mode: 'bot', difficulty: difficulty || 'normal', R: { s: seed >>> 0 }, round: 1, uid: 0, status: 'prep', winner: null,
+export function newMatch(cfg, { seed, now, me, bot, difficulty, mode }) {
+  const st = { v: 1, mode: mode || 'bot', ready: { me: false, bot: false }, difficulty: difficulty || 'normal', R: { s: seed >>> 0 }, round: 1, uid: 0, status: 'prep', winner: null,
     me: newSide(me.hero, me.deck), bot: newSide(bot.hero, bot.deck), last: null, opp_prev: null, log: [] };
   startRound(st, cfg, now, 0);
   return st;
@@ -174,7 +175,10 @@ function onPlay(st, cfg, sd, card) {
 export function act(st, cfg, sd, a, now) {
   if (st.status !== 'prep') return { error: 'La partie est terminée.' };
   const side = st[sd];
-  if (a.t === 'ready') return endPrep(st, cfg, now);
+  if (st.mode === 'pvp') {
+    if (st.ready[sd]) return { error: 'Tu es déjà prêt : en attente de l\'adversaire.' };
+    if (a.t === 'ready') { st.ready[sd] = true; return st.ready.me && st.ready.bot ? endPrep(st, cfg, now) : { ok: true, waiting: true }; }
+  } else if (a.t === 'ready') return endPrep(st, cfg, now);
   if (side.pending && a.t !== 'fusion') return { error: 'Choisis d\'abord le skill de la fusion.' };
   switch (a.t) {
     case 'fusion': {
@@ -481,11 +485,11 @@ export function simulate(cfg, st) {
 /* ---------- fin de préparation → combat → manche suivante ---------- */
 export function endPrep(st, cfg, now) {
   const me = st.me, bot = st.bot;
-  if (me.pending) checkFusion(st, cfg, 'me', true);
+  for (const sd of ['me', 'bot']) if (st[sd].pending) checkFusion(st, cfg, sd, true);
   const un = me.hero.fx.end_turn_heal_per_unspent_energy;
   if (un) me.hero.hp = Math.min(me.hero.max_hp, me.hero.hp + un * me.energy);
   const bun = bot.hero.fx.end_turn_heal_per_unspent_energy; // appliqué après la préparation du bot
-  botPrep(st, cfg);
+  if (st.mode !== 'pvp') botPrep(st, cfg);
   if (bun) bot.hero.hp = Math.min(bot.hero.max_hp, bot.hero.hp + bun * bot.energy);
   const r = simulate(cfg, st);
   const loserOf = r.winner === 'me' ? 'bot' : r.winner === 'bot' ? 'me' : null;
@@ -497,7 +501,7 @@ export function endPrep(st, cfg, now) {
     st[s].energy_penalty += r.energyDrain[s];
   }
   st.last = { round: st.round, winner: r.winner, ticks: r.ticks, init: r.init, loss: lossHero, hp: { me: st.me.hero.hp, bot: st.bot.hero.hp } };
-  st.opp_prev = r.init.filter((u) => u.side === 'bot');
+  st.opp_prev = st.mode === 'pvp' ? r.init : r.init.filter((u) => u.side === 'bot');
   let over = st.me.hero.hp <= 0 || st.bot.hero.hp <= 0 || st.round >= cfg.max_rounds;
   if (over) {
     const a = st.me.hero.hp, b = st.bot.hero.hp;
@@ -511,27 +515,36 @@ export function endPrep(st, cfg, now) {
 }
 
 /* ---------- vue client (sans secrets) ---------- */
-export function view(st, cfg, withLast = true) {
+const flipStr = (x) => (x === 'me' ? 'bot' : x === 'bot' ? 'me' : x.startsWith('me.') ? 'bot.' + x.slice(3) : x.startsWith('bot.') ? 'me.' + x.slice(4) : x);
+function flip(o) {
+  if (Array.isArray(o)) return o.map(flip);
+  if (o && typeof o === 'object') { const r = {}; for (const k in o) r[flipStr(k)] = flip(o[k]); return r; }
+  return typeof o === 'string' ? flipStr(o) : o;
+}
+/* viewer = 'me' (hôte / joueur) ou 'bot' (invité en duel) : chaque joueur se voit toujours comme « me » */
+export function view(st, cfg, withLast = true, viewer = 'me') {
+  const B = foe(viewer), fl = viewer === 'bot';
   const skills = {};
   const reg = (c) => { if (c && c.skill) skills[c.skill.id] = { id: c.skill.id, name: c.skill.name, rarity: c.skill.rarity, description: c.skill.description, cost: c.skill.cost, category: c.skill.category, trigger: c.skill.trigger }; };
-  const me = st.me;
+  const me = st[viewer], op = st[B];
   me.deck.forEach(reg); SLOTS.forEach((s) => reg(me.board[s])); me.offer.forEach(reg);
   // skills de l'adversaire visibles dans le dernier combat (uniquement ceux qui ont été joués)
   const seen = new Set(); [...(st.last ? st.last.init : []), ...(st.opp_prev || [])].forEach((u) => seen.add(u.skill_id));
-  st.bot.deck.forEach((c) => { if (seen.has(c.skill.id)) reg(c); });
-  SLOTS.forEach((s) => { const c = st.bot.board[s]; if (c && seen.has(c.skill.id)) reg(c); });
+  op.deck.forEach((c) => { if (seen.has(c.skill.id)) reg(c); });
+  SLOTS.forEach((s) => { const c = op.board[s]; if (c && seen.has(c.skill.id)) reg(c); });
   const card = (c, slot) => c && ({ uid: c.uid, slot, card_id: c.card_id, stars: c.stars, hp: c.hp, atk: c.atk, def: c.def, skill_id: c.skill.id,
     up_cost: c.stars >= cfg.max_stars ? null : cfg.stars[c.stars].upgrade_cost });
   const hero = (h) => ({ id: h.id, name: h.name, level: h.level, hp: h.hp, max_hp: h.max_hp, energy_cap: h.energy_cap });
-  const last = st.last && { round: st.last.round, winner: st.last.winner, loss: st.last.loss, hp: st.last.hp };
+  let last = st.last && { round: st.last.round, winner: st.last.winner, loss: st.last.loss, hp: st.last.hp };
   if (last && withLast) { last.init = st.last.init; last.ticks = st.last.ticks; }
+  if (fl && last) last = flip(last);
   return {
-    mode: st.mode, difficulty: st.difficulty, round: st.round, status: st.status, winner: st.winner, deadline: st.deadline, prep_start: st.prep_start,
-    me: { hero: hero(me.hero), energy: me.energy, max_energy: me.max_energy, free_rerolls: me.free_rerolls, allowed: allowedSlots(me), pending: me.pending,
+    mode: st.mode, difficulty: st.difficulty, round: st.round, status: st.status, winner: fl ? flipStr(st.winner || '') || null : st.winner, deadline: st.deadline, prep_start: st.prep_start,
+    me: { ready: !!(st.ready && st.ready[viewer]), hero: hero(me.hero), energy: me.energy, max_energy: me.max_energy, free_rerolls: me.free_rerolls, allowed: allowedSlots(me), pending: me.pending,
       board: Object.fromEntries(SLOTS.map((s) => [s, card(me.board[s], s) || null])),
       offer: me.offer.map((c, i) => c && { i, card_id: c.card_id, hp: c.hp, atk: c.atk, def: c.def, skill_id: c.skill.id, cost: isFinite(cardCost(me, c)) ? cardCost(me, c) : null }),
       reroll_cost: me.free_rerolls > 0 ? 0 : cfg.reroll_cost },
-    bot: { hero: hero(st.bot.hero) },
+    bot: { hero: hero(op.hero), ready: !!(st.ready && st.ready[B]) },
     last, skills,
     cfg: { slots: SLOTS, max_stars: cfg.max_stars, prep_seconds: cfg.prep_seconds, stars: cfg.stars, merge_count: cfg.merge_count },
   };

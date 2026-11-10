@@ -9,59 +9,66 @@
 .bt-sel{width:100%;padding:9px 10px;border-radius:9px;border:1px solid var(--line);background:var(--surface2);color:var(--ink);font:inherit}
 .dke-curve{font-size:12px;color:var(--muted);margin:4px 0 8px}.dke-warn{display:block;color:#c0562a;font-weight:600;margin-top:2px}
 
-/* ---- écran de partie : plein écran, le plateau prend presque toute la place ---- */
+/* ---- écran de partie : plein écran, le plateau (arène de château) prend presque toute la place ---- */
 #bt-game{display:flex;flex-direction:column;gap:6px}
 #bt-game:not([hidden]){position:fixed;inset:0;z-index:70;align-items:center;justify-content:center;padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px));
-  background:radial-gradient(ellipse at 50% 40%,#1c2233,#080a10);overflow:auto}
-.bt-bar{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;max-width:520px;flex:none;height:34px}
-.bt-round{font-weight:700;color:#f3e7cc}
-.bt-timer{font:700 17px var(--mono);padding:2px 10px;border-radius:8px;background:#2a2233;color:#ffe9b8;border:1px solid #6a4a22}
-.bt-timer.low{color:#fff;background:#d04545;border-color:#ff9a9a}
-.bt-bar .btn{padding:4px 10px}
+  background:radial-gradient(ellipse at 50% 30%,#1d2846 0%,#0b1020 55%,#04060c 100%);overflow:auto}
+/* barre du haut : planche de bois à bannières */
+.bt-bar{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;max-width:520px;flex:none;height:48px;box-sizing:border-box;padding:0 42px;
+  border-style:solid;border-width:0;border-image:url("../img/board/planche.png") 26 96 26 96 fill/13px 44px stretch;filter:drop-shadow(0 4px 6px rgba(0,0,0,.5))}
+.bt-round{font:800 15px var(--body);color:#ffe7b0;text-shadow:0 1px 0 #2a1407,0 0 6px rgba(0,0,0,.6);white-space:nowrap}
+.bt-round b{color:#fff}
+.bt-timer{font:800 15px var(--mono);padding:2px 10px;border-radius:999px;background:linear-gradient(180deg,#24305a,#141c38);color:#ffe9b8;border:2px solid #3d7be0;box-shadow:inset 0 1px 0 rgba(255,255,255,.15)}
+.bt-timer.low{color:#fff;background:linear-gradient(180deg,#d65050,#8f1e1e);border-color:#ffb0b0}
+.bt-bar .btn{padding:3px 10px;font-size:12px;border-radius:999px;background:linear-gradient(180deg,#7a4a26,#4e2c14);color:#ffe7b0;border:2px solid #d9a050;box-shadow:0 2px 0 #2a1407}
 .bt-speed{display:flex;gap:6px}
+.bt-opp{font-size:11px;color:#e8cf9c;padding:2px 8px;border-radius:99px;border:1px solid #8a6a3a;background:rgba(20,10,4,.55);white-space:nowrap}.bt-opp.on{color:#8ff0b0;border-color:#5fd08a}
 
-/* ---- plateau : image fournie, tout est posé en pourcentages / cqw ---- */
-.bt-stage{position:relative;aspect-ratio:428/834;width:min(100%,calc((100dvh - 56px)*428/834));flex:none;container-type:inline-size;
-  background:url("../img/board/plateau-mobile.png") center/100% 100% no-repeat;border-radius:4cqw;box-shadow:0 10px 40px rgba(0,0,0,.6);
-  --gem:11cqw;--med:15.5cqw;--slot:4.4cqw;--cw:19.5cqw;--car:.66;--cg:4.2cqw;--cf:2.4cqw;--heart:8.2cqw;--ow:29.5cqw}
-
-/* cartouches de bois : héros au centre, bouton d'objets à gauche, objets utilisés à droite */
-.bt-side{position:absolute;display:flex;align-items:center;justify-content:space-between;gap:1cqw;padding:0 3.2cqw;color:#fff}
-.bt-side-bot{left:25.2%;top:5.3%;width:51.4%;height:8.4%}
-.bt-side-me{left:23.4%;top:88.7%;width:53.7%;height:8.4%}
-.bt-itembtn{position:relative;width:var(--gem);height:var(--gem);flex:none;border:0;padding:0;background:none;display:flex;align-items:center;justify-content:center;cursor:pointer;filter:drop-shadow(0 .6cqw .8cqw rgba(0,0,0,.45))}
-.bt-itembtn .bt-gem-svg{position:absolute;inset:0;width:100%;height:100%}
-.bt-itembtn .ic{position:relative;font-size:calc(var(--gem)*.42);text-shadow:0 1px 2px rgba(0,0,0,.5)}
-.bt-itembtn small{position:absolute;right:-2px;bottom:-2px;background:#14161c;color:#fff;border-radius:9px;padding:0 calc(var(--gem)*.1);font:700 calc(var(--gem)*.26) var(--mono);border:1.5px solid #8fd0ff}
-.bt-itembtn.off{opacity:.55;cursor:default;filter:grayscale(.5) drop-shadow(0 2px 3px rgba(0,0,0,.4))}
-.bt-itembtn:not(.off):active{transform:scale(.93)}
-.bt-hcenter{display:flex;flex-direction:column;align-items:center;flex:none}
-.bt-hname,.bt-hcenter .bt-hhp{display:none}
-.bt-hportrait{position:relative;display:block;width:var(--med);height:var(--med);background:url("../img/board/rond.png") center/100% 100% no-repeat;filter:drop-shadow(0 .8cqw .8cqw rgba(0,0,0,.45))}
-.bt-hportrait img{position:absolute;inset:11%;width:78%;height:78%;border-radius:50%;object-fit:cover;object-position:top;display:block}
-.bt-heart{position:absolute;right:calc(var(--heart)*-.45);bottom:calc(var(--heart)*-.2);width:var(--heart);height:calc(var(--heart)*.9);display:flex;align-items:center;justify-content:center;padding-bottom:.4cqw;color:#fff;font:800 calc(var(--heart)*.38) var(--mono);text-shadow:0 1px 2px rgba(0,0,0,.7);
-  background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 36'><path d='M20 34 C4 22 1 14 3 9 C6 2 15 2 20 9 C25 2 34 2 37 9 C39 14 36 22 20 34Z' fill='%23d93a3a' stroke='%23ffffff' stroke-width='2.2' stroke-linejoin='round'/><path d='M9 9 C11 6 15 6 17 9' fill='none' stroke='%23ff9a9a' stroke-width='2' stroke-linecap='round'/></svg>") center/contain no-repeat;filter:drop-shadow(0 2px 3px rgba(0,0,0,.45))}
+/* ---- plateau : arène (image), tout est posé en pourcentages / cqw ---- */
+.bt-stage{position:relative;aspect-ratio:760/1230;width:min(100%,calc((100dvh - 66px)*760/1230));flex:none;container-type:inline-size;
+  background:url("../img/board/arene-mobile.webp") center/100% 100% no-repeat;filter:drop-shadow(0 12px 30px rgba(0,0,0,.6));
+  --med:6.6cqw;--medme:8.4cqw;--heart:7.4cqw;--cw:18cqw;--car:.66;--cg:2.8cqw;--cf:2.25cqw;--ow:26cqw;
+  --bp-x:44.95%;--bp-y:9.49%;--mp-x:50%;--mp-y:95.12%;--gem-x:33.78%;--gem-y:95.37%}
+/* héros : médaillons intégrés au décor (ennemi en haut, toi en bas) */
+.bt-side{position:absolute;inset:0;pointer-events:none;color:#fff}
+.bt-side>*{pointer-events:auto}
+.bt-hcenter{position:absolute;transform:translate(-50%,-50%)}
+.bt-side-bot .bt-hcenter{left:var(--bp-x);top:var(--bp-y)}
+.bt-side-me .bt-hcenter{left:var(--mp-x);top:var(--mp-y)}
+.bt-hname,.bt-hcenter .bt-hhp,.bt-used{display:none}
+.bt-hportrait{position:relative;display:block;width:var(--med);height:var(--med);border-radius:50%}
+.bt-side-me .bt-hportrait{width:var(--medme);height:var(--medme)}
+.bt-hportrait img{position:absolute;inset:4%;width:92%;height:92%;border-radius:50%;object-fit:cover;object-position:top;display:block}
+.bt-heart{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:var(--heart);height:calc(var(--heart)*.9);display:flex;align-items:center;justify-content:center;padding-bottom:.3cqw;box-sizing:border-box;color:#fff;font:800 calc(var(--heart)*.36) var(--mono);text-shadow:0 1px 2px rgba(0,0,0,.8);
+  background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 36'><path d='M20 34 C4 22 1 14 3 9 C6 2 15 2 20 9 C25 2 34 2 37 9 C39 14 36 22 20 34Z' fill='%23d93a3a' stroke='%23ffe2a8' stroke-width='2.4' stroke-linejoin='round'/><path d='M9 9 C11 6 15 6 17 9' fill='none' stroke='%23ff9a9a' stroke-width='2' stroke-linecap='round'/></svg>") center/contain no-repeat;filter:drop-shadow(0 2px 3px rgba(0,0,0,.5))}
+.bt-side-bot .bt-heart{margin-left:6.58cqw;--heart:6.6cqw}
+.bt-side-me .bt-heart{margin-left:12.5cqw;margin-top:1.7cqw}
 .bt-heart.pulse{animation:btpulse .7s ease-out}
-@keyframes btpulse{0%{transform:scale(1.6)}100%{transform:scale(1)}}
+@keyframes btpulse{0%{transform:translate(-50%,-50%) scale(1.6)}100%{transform:translate(-50%,-50%) scale(1)}}
 .bt-hhp{display:block;height:8px;border-radius:5px;background:var(--surface2);overflow:hidden}
 .bt-hhp i{display:block;height:100%;background:linear-gradient(90deg,#d04545,#f08a3a);transition:width .5s}
-.bt-used{display:grid;grid-template-columns:repeat(2,var(--slot));gap:.8cqw;justify-content:end}
-.bt-usedslot{width:var(--slot);height:var(--slot);border-radius:50%;background:radial-gradient(circle at 40% 35%,#4a2e16,#24150a);border:1.5px solid #c9a35a;box-shadow:inset 0 2px 4px rgba(0,0,0,.6)}
+/* objets : la gemme du décor sert de bouton */
+.bt-itembtn{position:absolute;left:var(--gem-x);top:var(--gem-y);transform:translate(-50%,-50%);width:7cqw;height:7cqw;border:0;padding:0;background:none;border-radius:30%;cursor:pointer}
+.bt-itembtn .bt-gem-svg,.bt-itembtn .ic{display:none}
+.bt-itembtn small{position:absolute;right:-1.2cqw;bottom:-1cqw;background:#14161c;color:#fff;border-radius:9px;padding:0 1cqw;font:700 2.6cqw var(--mono);border:1.5px solid #8fd0ff}
+.bt-itembtn:active{transform:translate(-50%,-50%) scale(.93)}
+.bt-itembtn.off{display:none}
 
-/* zones de jeu : cartes en 3 colonnes (2 / 1 / 2) sur la lave puis sur l'herbe */
-.bt-board{position:absolute;left:9.5%;width:81%;display:flex;align-items:center;justify-content:center}
-.bt-board-bot{top:17.2%;height:33.6%}
-.bt-board-me{top:55.2%;height:32%}
+/* zones de jeu : cartes en 3 colonnes (2 / 1 / 2), camp ennemi en haut, le tien en bas */
+.bt-board{position:absolute;left:18.4%;width:63.2%;display:flex;align-items:center;justify-content:center}
+.bt-board-bot{top:14.6%;height:36.6%}
+.bt-board-me{top:53.4%;height:36.6%}
 .bt-cols{display:flex;justify-content:center;align-items:center;gap:var(--cg)}
 .bt-col{display:flex;flex-direction:column;gap:calc(var(--cg)*.6);flex:none}
 .bt-cell{position:relative;display:block;width:var(--cw);aspect-ratio:var(--car);flex:none;border:0;padding:0;color:inherit;cursor:pointer;font:inherit;background:none}
 .bt-cell.ghost{cursor:default}
-/* emplacements vides : cadre doré fourni */
-.bt-cell:not(.full){border-image:url("../img/board/slot.png") 22 fill/calc(var(--cw)*.14) stretch;opacity:.62}
-.bt-cell:not(.full):not(.blocked):not(.ghost):hover{opacity:1;filter:drop-shadow(0 0 5px #ffe27a) brightness(1.2)}
-.bt-cell.sel{filter:drop-shadow(0 0 7px #ffe27a)}
-.bt-cell.blocked{filter:grayscale(1) brightness(.6);opacity:.55;cursor:not-allowed}
-.bt-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.5);font-size:calc(var(--cf)*2)}
+/* emplacements vides : cadre doré avec couronne, entier (plus de coupe) */
+.bt-cell:not(.full){background:url("../img/board/slot-couronne.png") center/100% 100% no-repeat;filter:drop-shadow(0 .5cqw .6cqw rgba(0,0,0,.35))}
+.bt-cell:not(.full):not(.blocked):not(.ghost):hover{filter:drop-shadow(0 0 1.2cqw #ffe27a) brightness(1.15)}
+.bt-cell.sel{filter:drop-shadow(0 0 1.4cqw #ffe27a)}
+.bt-cell.blocked{filter:grayscale(1) brightness(.6);opacity:.6;cursor:not-allowed}
+.bt-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.7);font-size:calc(var(--cf)*2)}
+.bt-empty svg{display:none}
 .bt-emblem{width:46%;height:auto;opacity:.35}
 
 /* ---- cartes : cadre par rareté (argent / bleu / violet / or), nom, image, ATQ-DEF-PV, skill ---- */
@@ -117,13 +124,12 @@
 .bt-float.dmg{color:#ff6a6a}.bt-float.dot{color:#e8a33d}.bt-float.heal{color:#5ae08f}.bt-float.shield{color:#7db6ff}.bt-float.skill{color:#e6ccff;font-size:calc(var(--cf)*1.1)}.bt-float.miss{color:#ddd;font-size:calc(var(--cf)*1.1)}
 @keyframes btfloat{from{opacity:1;transform:translate(-50%,0)}to{opacity:0;transform:translate(-50%,-38px)}}
 
-/* ---- panneau de tirage (pendant la préparation) : prend la place du camp ennemi ---- */
-.bt-draw{position:absolute;z-index:5;left:3%;width:94%;top:15.6%;height:36.6%;display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:1cqw;padding:1.8cqw 1.4cqw;
-  border-radius:3cqw;border:.7cqw solid #c98a2c;
-  background:
-    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 100'><g fill='none' stroke='%23c98a2c' stroke-opacity='.13' stroke-width='2'><rect x='70' y='26' width='34' height='48' rx='4' transform='rotate(-14 87 50)'/><rect x='96' y='26' width='34' height='48' rx='4' transform='rotate(14 113 50)'/><rect x='83' y='22' width='34' height='48' rx='4'/><path d='M60 78c-14-8-20-26-18-44M140 78c14-8 20-26 18-44'/></g></svg>") center 38%/62% no-repeat,
-    radial-gradient(ellipse at 50% 40%,#6b3f22,#3d2112 70%,#2c170c);
-  box-shadow:inset 0 0 0 .5cqw #5a3314,inset 0 0 0 .8cqw #e3b25a,inset 0 0 5cqw rgba(0,0,0,.55),0 1.2cqw 2.6cqw rgba(0,0,0,.55)}
+/* ---- panneau de tirage (pendant la préparation) : cadre bois et pierre, fond bleu nuit, posé sur le camp ennemi ---- */
+.bt-draw{position:absolute;z-index:5;left:3%;width:94%;top:13.2%;height:39.6%;display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:1cqw;box-sizing:border-box;padding:4.6cqw 4.6cqw 5.4cqw;isolation:isolate;
+  border-style:solid;border-width:0;border-image:url("../img/board/cadre-panneau.png") 42 44 46 42 fill/6.4cqw 6.6cqw 7cqw 6.4cqw stretch;filter:drop-shadow(0 1.5cqw 2.5cqw rgba(0,0,0,.6))}
+.bt-draw::before{content:"";position:absolute;inset:2.6cqw 2.4cqw 3.2cqw;z-index:-1;border-radius:1.4cqw;
+  background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 44'><path d='M8 36 L4 12 L18 22 L30 6 L42 22 L56 12 L52 36Z M8 40 H52' fill='none' stroke='%23ffffff' stroke-opacity='.07' stroke-width='3' stroke-linejoin='round'/></svg>") center 45%/34% no-repeat,
+  radial-gradient(ellipse at 50% 35%,#2b3c6e,#18234a 60%,#0f1733)}
 .bt-draw.enter{animation:btdrawin .6s cubic-bezier(.2,.9,.3,1) both}
 .bt-draw.leaving{animation:btdrawout .65s cubic-bezier(.5,0,.8,.4) forwards;pointer-events:none}
 @keyframes btdrawin{from{opacity:0;transform:translateY(-9%) scale(.94)}to{opacity:1;transform:none}}
@@ -135,41 +141,45 @@
 @keyframes btleave{to{opacity:0;transform:translateY(-6%)}}
 .bt-dtop,.bt-dbot{flex:none;width:100%;display:flex;align-items:center;justify-content:space-between;gap:2cqw}
 .bt-dmid{flex:1;min-height:0;width:100%;display:flex;align-items:center;justify-content:center}
-.bt-en{display:inline-flex;align-items:center;gap:1.2cqw;font-size:2.7cqw;color:#f3dfb4}
-.bt-en b{display:inline-flex;align-items:center;gap:.8cqw;padding:.5cqw 2.4cqw;border-radius:999px;color:#fff;background:linear-gradient(180deg,#4aa8ff,#1f59c4);border:.35cqw solid #cfe8ff;box-shadow:0 .4cqw 1cqw rgba(0,0,0,.4);font-size:3.2cqw}
-.bt-btn{cursor:pointer;font:700 2.9cqw var(--body);color:#fff4d6;padding:1.1cqw 3.2cqw;border-radius:2cqw;border:.4cqw solid #e3b25a;background:linear-gradient(180deg,#8a5a2e,#5a3416);box-shadow:0 .5cqw 0 #2a1608,0 .9cqw 1.4cqw rgba(0,0,0,.4)}
-.bt-btn:active{transform:translateY(.3cqw)}
+.bt-en{display:inline-flex;align-items:center;gap:0;font:800 3.3cqw var(--mono);color:#fff;height:7cqw;padding:0 3cqw 0 0;border-radius:999px;background:linear-gradient(180deg,#25336a,#141d40);border:.5cqw solid #3d7be0;box-shadow:inset 0 .3cqw 0 rgba(255,255,255,.12),0 .6cqw 1cqw rgba(0,0,0,.45)}
+.bt-en i{display:flex;align-items:center;justify-content:center;width:7cqw;height:7cqw;margin:-.5cqw 2cqw -.5cqw -.5cqw;border-radius:50%;font-style:normal;font-size:3.4cqw;background:radial-gradient(circle at 35% 30%,#7fd0ff,#1f59c4);border:.5cqw solid #9fd4ff;box-shadow:0 .4cqw .8cqw rgba(0,0,0,.4)}
+.bt-en b{font-weight:800}.bt-en small{font-size:.8em;opacity:.75;margin-left:.5cqw}
+.bt-btn{cursor:pointer;font:800 3cqw var(--body);color:#ffe7b0;padding:1.4cqw 3.6cqw;border-radius:999px;border:.5cqw solid #d9a050;background:linear-gradient(180deg,#86532b,#55301a);
+  text-shadow:0 1px 0 #2a1407;box-shadow:inset 0 .4cqw 0 rgba(255,255,255,.15),0 .6cqw 0 #2a1407,0 1cqw 1.4cqw rgba(0,0,0,.4);white-space:nowrap}
+.bt-btn:active{transform:translateY(.4cqw);box-shadow:inset 0 .4cqw 0 rgba(255,255,255,.15),0 .2cqw 0 #2a1407}
 .bt-btn:disabled{opacity:.5;cursor:not-allowed}
-.bt-btn.go{background:linear-gradient(180deg,#3fb868,#1c7a3c);border-color:#bff0cf;font-size:3.4cqw;padding:1.3cqw 4.4cqw}
-.bt-info{flex:1;min-width:0;font-size:2.55cqw;line-height:1.3;color:#f3dfb4;text-shadow:0 1px 2px rgba(0,0,0,.6);text-align:left;max-height:11cqw;overflow:hidden;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical}
-.bt-info b{color:#fff}.bt-info .muted{color:#d9bf8c}
+.bt-btn.go{color:#fff;background:linear-gradient(180deg,#5ad86a 0%,#2fa646 55%,#228a38 100%);border-color:#1b5e2a;border-radius:2.2cqw;font-size:3.6cqw;padding:1.5cqw 5cqw;text-shadow:0 .3cqw 0 #1b5e2a;
+  box-shadow:inset 0 .5cqw 0 rgba(255,255,255,.3),0 .7cqw 0 #144a20,0 1.2cqw 1.6cqw rgba(0,0,0,.45)}
+.bt-info{flex:1;min-width:0;font-size:2.55cqw;line-height:1.3;color:#d6def5;text-shadow:0 1px 2px rgba(0,0,0,.6);text-align:left;max-height:11cqw;overflow:hidden;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical}
+.bt-info b{color:#fff}.bt-info .muted{color:#aebbe0}
 .bt-info.hint{color:#e8cf9c}
 
 /* trois cartes tirées, chacune dans un emplacement de tirage (image fournie) */
 .bt-offers{display:flex;align-items:center;justify-content:center;gap:.8cqw}
-.bt-off{position:relative;display:block;width:var(--ow);aspect-ratio:58/89;flex:none;padding:calc(var(--ow)*.125) calc(var(--ow)*.115);box-sizing:border-box;cursor:pointer;color:inherit;font:inherit;
-  border:calc(var(--ow)*.01) solid transparent;background:url("../img/board/slot-tirage.png") center/100% 100% no-repeat;transition:transform .15s,filter .15s}
+.bt-off{position:relative;display:block;width:var(--ow);aspect-ratio:98/134;flex:none;padding:calc(var(--ow)*.07);box-sizing:border-box;cursor:pointer;color:inherit;font:inherit;
+  border:0;background:url("../img/board/slot-couronne.png") center/100% 100% no-repeat;transition:transform .15s,filter .15s}
 .bt-off:hover{filter:brightness(1.12)}
 .bt-off:active{transform:scale(.97)}
-.bt-off .bt-unit{position:relative;inset:auto;width:100%;height:100%;--cf:2.7cqw;box-shadow:0 0 .8cqw var(--fg)}
+.bt-off .bt-unit{position:relative;inset:auto;width:100%;height:100%;--cf:2.4cqw;box-shadow:0 0 .8cqw var(--fg)}
 .bt-off.sel{filter:drop-shadow(0 0 1.4cqw #ffe27a) brightness(1.2);transform:translateY(-1cqw)}
 .bt-off.bt-off-no .bt-unit{filter:grayscale(.75) brightness(.65)}
-.bt-off-empty{display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.4);cursor:default}
+.bt-off-empty{display:block;color:transparent;cursor:default}
 .bt-cost{position:absolute;top:calc(var(--ow)*-.05);left:calc(var(--ow)*-.05);width:calc(var(--ow)*.24);height:calc(var(--ow)*.24);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font:800 calc(var(--ow)*.14) var(--mono);z-index:4;
   background:radial-gradient(circle at 35% 30%,#7fd0ff,#1f59c4);border:.4cqw solid #fff;box-shadow:0 .4cqw 1cqw rgba(0,0,0,.5);text-shadow:0 1px 2px rgba(0,0,0,.6)}
 .bt-off-no .bt-cost{background:radial-gradient(circle at 35% 30%,#d06a6a,#7a1f1f)}
 /* cartes tirées : version détaillée (symboles, nom du skill) */
 .bt-unit.big .bt-uskill{display:flex}
 /* fiche de la carte posée sélectionnée (remplace les cartes tirées) */
-.bt-infobig{display:flex;width:100%;height:100%;flex-direction:column;align-items:flex-start;justify-content:center;gap:1.4cqw;position:relative;padding:0 2cqw;text-align:left;font-size:3cqw;line-height:1.35;color:#f3dfb4}
-.bt-infobig b{color:#fff}.bt-infobig .muted{color:#d9bf8c}
+.bt-infobig{display:flex;width:100%;height:100%;flex-direction:column;align-items:flex-start;justify-content:center;gap:1.4cqw;position:relative;padding:0 2cqw;text-align:left;font-size:3cqw;line-height:1.35;color:#d6def5}
+.bt-infobig b{color:#fff}.bt-infobig .muted{color:#aebbe0}
 .bt-infobig .bt-btn{padding:1cqw 3cqw}
-.bt-close{position:absolute;right:0;top:0;width:6cqw;height:6cqw;border-radius:50%;border:.4cqw solid #e3b25a;background:#3a200e;color:#fff;cursor:pointer;font-size:3cqw;line-height:1}
+.bt-close{position:absolute;right:0;top:0;width:6cqw;height:6cqw;border-radius:1.4cqw;border:.4cqw solid #ff9a9a;background:linear-gradient(180deg,#e05050,#a02424);color:#fff;cursor:pointer;font-size:3cqw;line-height:1}
 
 /* bannière de résultat, par-dessus le plateau */
-.bt-banner{position:absolute;z-index:9;left:12%;width:76%;top:45%;display:flex;flex-direction:column;align-items:center;gap:.6cqw;padding:2.4cqw 3cqw;border-radius:3cqw;
-  background:rgba(30,16,8,.9);border:.6cqw solid #e3b25a;color:#fff4d6;font-size:4.2cqw;box-shadow:0 1.5cqw 4cqw rgba(0,0,0,.6);animation:btdrawin .45s ease-out both}
-.bt-banner span{font-size:2.8cqw;color:#e8cf9c}
+.bt-banner{position:absolute;z-index:9;left:8%;width:84%;top:43%;display:flex;flex-direction:column;align-items:center;gap:.8cqw;box-sizing:border-box;padding:5cqw 6cqw 5.6cqw;isolation:isolate;
+  border-style:solid;border-width:0;border-image:url("../img/board/cadre-panneau.png") 42 44 46 42 fill/6.4cqw 6.6cqw 7cqw 6.4cqw stretch;color:#fff;font:800 4.6cqw var(--body);text-shadow:0 2px 0 #0b1226;filter:drop-shadow(0 1.5cqw 3cqw rgba(0,0,0,.6));animation:btdrawin .45s ease-out both}
+.bt-banner::before{content:"";position:absolute;inset:2.6cqw 2.4cqw 3.2cqw;z-index:-1;border-radius:1.4cqw;background:radial-gradient(ellipse at 50% 35%,#2b3c6e,#18234a 60%,#0f1733)}
+.bt-banner span{font:600 2.9cqw var(--body);color:#c9d4f2;text-shadow:none}
 
 /* fusion / écran de fin */
 .bt-modal{position:fixed;inset:0;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
@@ -183,34 +193,53 @@
 .bt-hinfo{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0}.bt-hinfo small{color:var(--muted);font-weight:500}.bt-hinfo em{font:600 11px var(--mono);font-style:normal;color:var(--muted)}
 .bt-hero .bt-hhp i{background:linear-gradient(90deg,#d04545,#f08a3a)}.bt-hero-me .bt-hhp i{background:linear-gradient(90deg,#2f9e63,#6fd08f)}
 
-/* ===== grand écran : plateau horizontal 16:9, 5 cartes sur une rangée (groupes 2 / 1 / 2) ===== */
+/* ===== grand écran : arène carrée, 5 cartes par camp sur une rangée (groupes 2 / 1 / 2) ===== */
 @media (min-width:900px){
-  .bt-bar{max-width:1400px}
-  .bt-stage{aspect-ratio:1191/533;width:min(100%,calc((100dvh - 56px)*1191/533),1700px);background-image:url("../img/board/plateau-pc.png");border-radius:1.5cqw;
-    --gem:4.2cqw;--med:6.2cqw;--slot:1.9cqw;--cw:8.4cqw;--cg:7cqw;--cf:.95cqw;--heart:3.3cqw;--ow:9.2cqw}
-  .bt-side-bot{left:34.4%;top:1.5%;width:28.1%;height:13.1%}
-  .bt-side-me{left:35.1%;top:85.4%;width:26.6%;height:13.1%}
-  .bt-board{left:10%;width:80%}
-  .bt-board-bot{top:17%;height:34%}
-  .bt-board-me{top:55.5%;height:28%}
-  .bt-col{flex-direction:row;gap:1.2cqw}
+  .bt-bar{max-width:min(100%,calc((100dvh - 66px)*760/690));height:56px;padding:0 64px;border-image-width:15px 52px}
+  .bt-round{font-size:18px}
+  .bt-stage{aspect-ratio:760/690;width:min(100%,calc((100dvh - 74px)*760/690));background-image:url("../img/board/arene-pc.webp");
+    --med:6.6cqw;--medme:8.4cqw;--heart:6.6cqw;--cw:10.4cqw;--cg:3.4cqw;--cf:1.15cqw;--ow:12.6cqw;
+    --mp-y:91.3%;--gem-y:91.74%;--bp-y:16.91%}
+  .bt-side-bot .bt-heart{--heart:5.8cqw}
+  .bt-itembtn small{font-size:1.5cqw}
+  .bt-board{left:18.4%;width:63.2%}
+  .bt-board-bot{top:25%;height:28%}
+  .bt-board-me{top:54.4%;height:28%}
+  .bt-col{flex-direction:row;gap:1cqw}
   .bt-board-bot .bt-col:last-child,.bt-board-me .bt-col:first-child{flex-direction:row-reverse}
-  .bt-cell:not(.full){border-image-width:calc(var(--cw)*.12)}
   .bt-float{font-size:calc(var(--cf)*1.3)}
   /* panneau de tirage : énergie / relance à gauche, cartes au centre, infos / Prêt à droite */
-  .bt-draw{left:5%;width:90%;top:16.4%;height:37%;flex-direction:row;padding:.9cqw 2cqw;gap:2cqw}
-  .bt-dtop,.bt-dbot{width:22cqw;flex:none;flex-direction:column;align-items:stretch;justify-content:center;gap:1.2cqw;height:100%}
-  .bt-dbot{align-items:stretch}
-  .bt-dtop .bt-en{justify-content:center;font-size:1.2cqw}.bt-en b{font-size:1.5cqw;padding:.3cqw 1.2cqw;border-width:.2cqw}
-  .bt-btn{font-size:1.3cqw;padding:.5cqw 1.5cqw;border-radius:.9cqw;border-width:.2cqw;box-shadow:0 .25cqw 0 #2a1608,0 .5cqw .8cqw rgba(0,0,0,.4)}
-  .bt-btn.go{font-size:1.6cqw;padding:.7cqw 1.5cqw}
-  .bt-info{font-size:1.1cqw;max-height:none}
-  .bt-offers{gap:1.2cqw}
-  .bt-off .bt-unit{--cf:.9cqw}
+  .bt-draw{left:7%;width:86%;top:21.5%;height:34.5%;flex-direction:row;padding:3.6cqw 4cqw 4.4cqw;gap:2cqw;border-image-width:5cqw 5.2cqw 5.6cqw 5cqw}
+  .bt-draw::before{inset:2cqw 1.9cqw 2.6cqw}
+  .bt-dtop,.bt-dbot{width:19cqw;flex:none;flex-direction:column;align-items:stretch;justify-content:center;gap:1.6cqw;height:100%}
+  .bt-dtop .bt-en{justify-content:flex-start;align-self:center;font-size:2cqw;height:4.6cqw;padding-right:2cqw;border-width:.35cqw}
+  .bt-en i{width:4.6cqw;height:4.6cqw;font-size:2.2cqw;margin-right:1.2cqw;border-width:.35cqw;margin-top:-.35cqw;margin-bottom:-.35cqw;margin-left:-.35cqw}
+  .bt-btn{font-size:1.7cqw;padding:.9cqw 1.6cqw;border-width:.3cqw}
+  .bt-btn.go{font-size:2.2cqw;padding:1cqw 1.6cqw;border-radius:1.3cqw}
+  .bt-info{font-size:1.45cqw;max-height:none}
+  .bt-offers{gap:1.6cqw}
+  .bt-off .bt-unit{--cf:1.2cqw}
   .bt-off .bt-uskill{display:none}
-  .bt-banner{top:44%;left:30%;width:40%;font-size:2cqw;padding:1cqw 2cqw;border-width:.3cqw;border-radius:1.2cqw}.bt-banner span{font-size:1.2cqw}
-  .bt-infobig{font-size:1.2cqw}
-  .bt-close{width:2.4cqw;height:2.4cqw;font-size:1.2cqw;border-width:.2cqw}
-  .bt-cost{border-width:.2cqw}
+  .bt-banner{top:42%;left:25%;width:50%;font-size:3cqw;padding:3.4cqw 4cqw 3.8cqw;border-image-width:4.4cqw 4.6cqw 5cqw 4.4cqw}
+  .bt-banner::before{inset:1.8cqw 1.7cqw 2.3cqw}.bt-banner span{font-size:1.7cqw}
+  .bt-infobig{font-size:1.6cqw}
+  .bt-close{width:3.2cqw;height:3.2cqw;font-size:1.6cqw;border-width:.25cqw}
+  .bt-cost{border-width:.25cqw}
 }
 @media (max-width:899px){.bt-skd{display:none!important}}
+
+/* ---------- duel entre joueurs ---------- */
+.dl-row{display:flex;gap:8px;align-items:center}.dl-row .bt-sel{flex:1;min-width:0}
+#dl-form{display:flex;flex-direction:column;gap:6px}
+.dl-invites{display:flex;flex-direction:column;gap:6px;margin-bottom:4px}
+.dl-inv{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 10px;border-radius:10px;border:1px solid var(--gold,#f2c14e);background:rgba(242,193,78,.1);font-size:13px}
+.dl-lobby{display:flex;flex-direction:column;gap:10px;align-items:stretch;text-align:center}
+.dl-wait{display:flex;gap:8px;align-items:center;justify-content:center;margin:0;color:var(--ink)}
+.dl-code{font:800 34px/1 var(--mono,monospace);letter-spacing:.22em;padding:14px 8px 14px 18px;border-radius:12px;border:2px dashed var(--gold,#f2c14e);color:var(--gold-hi,#ffd878);cursor:pointer;user-select:all}
+.bt-spin{width:14px;height:14px;border-radius:50%;border:2px solid rgba(255,255,255,.25);border-top-color:var(--gold,#f2c14e);display:inline-block;animation:btspin .8s linear infinite}
+@keyframes btspin{to{transform:rotate(360deg)}}
+.bt-opp{font-size:12px;color:var(--muted);padding:3px 9px;border-radius:99px;border:1px solid var(--line)}.bt-opp.on{color:#7be0a0;border-color:#7be0a0}
+.bt-draw.bt-wait{display:flex;align-items:center;justify-content:center}
+.bt-waitin{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;padding:12px;font-size:clamp(12px,3.2cqw,15px);color:var(--ink)}
+.bt-waitin b{font-size:1.4em;color:var(--gold-hi,#ffd878)}
+@media (prefers-reduced-motion:reduce){.bt-spin{animation:none}}

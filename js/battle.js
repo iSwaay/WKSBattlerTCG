@@ -2,7 +2,7 @@
 /* Combat auto battler : menu des modes, préparation (achat / étoiles / placement), replay du combat.
    Toute la logique de jeu est sur le serveur (edge function "match") ; ce fichier n'affiche que l'état reçu. */
 
-var BT = { id: null, v: null, off: 0, busy: false, sel: null, replaying: false, speed: 1, skip: false, timer: null, readySent: false, lastInit: null, active: null };
+var BT = { id: null, v: null, off: 0, busy: false, sel: null, replaying: false, speed: 1, skip: false, timer: null, readySent: false, lastInit: null, active: null, pvp: false, seenRound: 0 };
 var BT_SLOTS = ['L1', 'L2', 'C1', 'R1', 'R2'];
 var BT_STATUS = { poison: '☠️', burn: '🔥', bleed: '🩸', regen: '💚', freeze: '❄️', stun: '💫', silence: '🔇', taunt: '🛡️', invulnerable: '✨', reflect: '🔁', dodge: '💨', swap: '🔀' };
 var BT_TRIG = { on_play: 'À la pose', on_combat_start: 'Début du combat', on_attack: 'À chaque attaque', every_n_attacks: 'Toutes les N attaques', on_hit: 'Quand touchée', on_kill: 'Quand elle tue', on_death: 'À sa mort', on_hp_below: 'Sous un seuil de PV', passive: 'Permanent' };
@@ -11,8 +11,8 @@ function btSleep(ms) { return new Promise(function(r){ setTimeout(r, ms); }); }
 function btNow() { return Date.now() + BT.off; }
 
 /* ---------- appels serveur ---------- */
-async function btCall(body) {
-  var r = await sb.functions.invoke('match', { body: body });
+async function btCall(body, fn) {
+  var r = await sb.functions.invoke(fn || 'match', { body: body });
   if (r.error) {
     var msg = r.error.message || 'Erreur';
     try { if (r.error.context && r.error.context.json) { var j = await r.error.context.json(); if (j && j.error) msg = j.error; } } catch (e) {}
@@ -20,6 +20,11 @@ async function btCall(body) {
   }
   if (r.data && r.data.now) BT.off = r.data.now - Date.now();
   return r.data || { error: 'Réponse vide.' };
+}
+
+/* appel de la partie en cours : bot (fonction "match") ou duel entre joueurs (fonction "duel") */
+function btGame(body) {
+  return BT.pvp ? btCall(Object.assign({ duel_id: BT.id }, body), 'duel') : btCall(Object.assign({ match_id: BT.id }, body));
 }
 
 /* ---------- menu ---------- */
@@ -53,6 +58,7 @@ async function btStart() {
   var r = await btCall({ action: 'start', deck_id: deck, difficulty: $('bt-diff').value });
   b.disabled = false;
   if (r.error) { toast(r.error); return; }
+  BT.pvp = false; if (typeof dlPollStop === 'function') dlPollStop();
   BT.id = r.match_id; BT.lastInit = null; BT.readySent = false; BT.sel = null;
   btApply(r.view, true); btShow(true);
 }
@@ -61,6 +67,7 @@ async function btResume() {
   var r = await btCall({ action: 'resume' });
   if (r.error) { toast(r.error); return; }
   if (!r.view) { BT.active = null; btRefreshMenu(); return; }
+  BT.pvp = false; if (typeof dlPollStop === 'function') dlPollStop();
   BT.id = r.match_id; BT.sel = null; BT.readySent = false;
   btApply(r.view, true); btShow(true);
 }
@@ -199,11 +206,17 @@ function btDrawHTML(v, enter) {
     ? btInfoBigHTML(v)
     : '<div class="bt-offers">' + v.me.offer.map(function(o){ return btOffCardHTML(o, v.me.energy); }).join('') + '</div>';
   return '<div class="bt-draw' + (enter ? ' enter' : '') + '" id="bt-draw">' +
-    '<div class="bt-dtop"><span class="bt-en"><b>⚡ ' + v.me.energy + '</b> / ' + v.me.max_energy + '</span>' +
+    '<div class="bt-dtop"><span class="bt-en" title="Énergie"><i>⚡</i><b>' + v.me.energy + '</b><small>/ ' + v.me.max_energy + '</small></span>' +
       '<button type="button" class="bt-btn" id="bt-reroll">Relancer (' + v.me.reroll_cost + ' ⚡)</button></div>' +
     '<div class="bt-dmid">' + mid + '</div>' +
     '<div class="bt-dbot"><div class="bt-info" id="bt-info">' + btInfoHTML(v) + '</div>' +
       '<button type="button" class="bt-btn go" id="bt-ready">Prêt ▶</button></div></div>';
+}
+
+/* duel : on est prêt, on attend que l'adversaire le soit (ou que le chrono tombe) */
+function btWaitHTML(v) {
+  return '<div class="bt-draw bt-wait" id="bt-draw"><div class="bt-waitin"><span class="bt-spin"></span><b>Prêt !</b>' +
+    '<span>' + (v.bot.ready ? 'Le combat démarre…' : 'En attente de l\'adversaire (le chrono lance la manche s\'il tarde).') + '</span></div></div>';
 }
 
 function btRender(enter) {
@@ -213,8 +226,9 @@ function btRender(enter) {
   g.innerHTML =
     '<div class="bt-bar"><button type="button" class="btn sm" id="bt-quit">Abandonner</button>' +
       '<span class="bt-round">Manche <b>' + v.round + '</b></span>' +
+      (BT.pvp ? '<span class="bt-opp' + (v.bot.ready ? ' on' : '') + '">' + (v.bot.ready ? 'Adversaire prêt ✓' : 'Adversaire en préparation…') + '</span>' : '') +
       '<span class="bt-timer" id="bt-timer">—</span></div>' +
-    btStageHTML(v.bot.hero, btBoardCells('bot', v), btBoardCells('me', v), v.me.hero, btDrawHTML(v, enter)) +
+    btStageHTML(v.bot.hero, btBoardCells('bot', v), btBoardCells('me', v), v.me.hero, v.me.ready ? btWaitHTML(v) : btDrawHTML(v, enter)) +
     (pend ? btFusionHTML(pend, v) : '');
 }
 
@@ -244,7 +258,7 @@ function btStartTimer() {
 async function btAct(a) {
   if (BT.busy || BT.replaying) return null;
   BT.busy = true;
-  var r = await btCall({ action: 'act', match_id: BT.id, a: a });
+  var r = await btGame({ action: 'act', a: a });
   BT.busy = false;
   if (r.error && !r.view) { toast(r.error); return r; }
   if (r.view) { if (r.error) toast(r.error); BT.sel = null; btApply(r.view); }
@@ -255,11 +269,13 @@ async function btReady(auto) {
   if (BT.readySent || BT.busy || BT.replaying) return;
   BT.readySent = true; BT.busy = true;
   var dr = $('bt-draw'); if (dr) dr.classList.add('leaving');   // le panneau de tirage se retire, le décor de base réapparaît
-  var rr = await Promise.all([btCall({ action: 'act', match_id: BT.id, a: { t: 'ready' } }), btSleep(520)]);
+  var rr = await Promise.all([btGame({ action: 'act', a: { t: 'ready' } }), btSleep(520)]);
   var r = rr[0];
   BT.busy = false;
   if (r.error && !r.view) { BT.readySent = false; toast(r.error); btRender(true); return; }
   if (!r.view) { BT.readySent = false; btRender(true); return; }
+  if (BT.pvp && !(r.view.last && r.view.last.round > BT.seenRound)) { BT.v = r.view; btApply(r.view); return; }   // duel : on attend l'adversaire (readySent reste vrai)
+  if (BT.pvp) BT.seenRound = r.view.last.round;
   await btReplay(r.view, r.reward);
   BT.readySent = false;
 }
@@ -400,7 +416,7 @@ document.addEventListener('click', function(e) {
   if (t.closest('#bt-resume-go')) { btResume(); return; }
   if (t.closest('#bt-forfeit')) { btForfeit(); return; }
   if (t.closest('#bt-back')) {
-    BT.id = null; BT.v = null; BT.reward = null; BT.active = null; btShow(false);
+    BT.id = null; BT.v = null; BT.reward = null; BT.active = null; BT.pvp = false; if (typeof dlPollStop === 'function') dlPollStop(); btShow(false);
     try { loadHeroes(); } catch (x) {}
     btRefreshMenu(); return;
   }
@@ -410,9 +426,10 @@ document.addEventListener('click', function(e) {
   if (BT.replaying) return;
   if (t.closest('#bt-quit')) {
     if (!confirm('Abandonner la partie en cours ? Aucune récompense ne sera donnée.')) return;
-    btCall({ action: 'forfeit', match_id: BT.id }).then(function(){ BT.id = null; BT.v = null; BT.active = null; if (BT.timer) clearInterval(BT.timer); btShow(false); btRefreshMenu(); });
+    btGame({ action: 'forfeit' }).then(function(){ BT.id = null; BT.v = null; BT.active = null; BT.pvp = false; if (typeof dlPollStop === 'function') dlPollStop(); if (BT.timer) clearInterval(BT.timer); btShow(false); btRefreshMenu(); });
     return;
   }
+  if (BT.v && BT.v.me && BT.v.me.ready) return;
   if (t.closest('#bt-items')) { toast('Les objets utilisables en combat arrivent bientôt.'); return; }
   if (t.closest('[data-close]')) { BT.sel = null; btRender(); return; }
   if (t.closest('#bt-ready')) { btReady(false); return; }

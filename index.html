@@ -9,7 +9,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 <link rel="stylesheet" href="css/styles.css?v=20261110">
-<link rel="stylesheet" href="css/battle.css?v=20261110">
+<link rel="stylesheet" href="css/battle.css?v=20261112">
 <link rel="stylesheet" href="css/theme.css?v=20261110">
 <meta name="theme-color" content="#0a1026">
 </head>
@@ -333,11 +333,22 @@
               <button type="button" class="btn primary" id="bt-start">Lancer l'entraînement</button>
               <p class="hint" id="bt-resume" style="margin:8px 0 0" hidden></p>
             </div>
-            <div class="bt-mode bt-soon">
+            <div class="bt-mode" id="dl-card">
               <div class="bt-mode-ico">🛡️</div>
-              <h3>Duel</h3>
-              <p>Affronte le deck d'un autre joueur, sans qu'il ait besoin d'être connecté.</p>
-              <button type="button" class="btn" disabled>Bientôt disponible</button>
+              <h3>Duel entre joueurs</h3>
+              <p>Même combat que contre un bot, mais face à un autre joueur, en direct. Invite un ami ou partage un code.</p>
+              <div id="dl-invites" class="dl-invites" hidden></div>
+              <div id="dl-form">
+                <label class="bt-lbl" for="dl-deck">Deck</label>
+                <select id="dl-deck" class="bt-sel"></select>
+                <button type="button" class="btn primary" id="dl-create">Créer un duel (code)</button>
+                <label class="bt-lbl" for="dl-friend">Inviter un ami</label>
+                <div class="dl-row"><select id="dl-friend" class="bt-sel"></select><button type="button" class="btn" id="dl-invite">Inviter</button></div>
+                <label class="bt-lbl" for="dl-code-in">Rejoindre avec un code</label>
+                <div class="dl-row"><input id="dl-code-in" class="bt-sel" maxlength="8" autocomplete="off" autocapitalize="characters" placeholder="Ex. K7P2QX" style="text-transform:uppercase"><button type="button" class="btn" id="dl-join">Rejoindre</button></div>
+              </div>
+              <div id="dl-lobby" class="dl-lobby" hidden></div>
+              <p class="hint" id="dl-resume" style="margin:8px 0 0" hidden></p>
             </div>
             <div class="bt-mode bt-soon">
               <div class="bt-mode-ico">🏟️</div>
@@ -497,7 +508,8 @@
 <script src="js/heroes.js?v=20261110"></script>
 <script src="js/decks.js?v=20261110"></script>
 <script src="js/battle-art.js?v=20261110"></script>
-<script src="js/battle.js?v=20261110"></script>
+<script src="js/battle.js?v=20261112"></script>
+<script src="js/duel.js?v=20261111"></script>
 <script src="js/events.js?v=20261110"></script>
 <script src="js/pack-carousel.js?v=20261110"></script>
 </body>
