@@ -72,7 +72,7 @@ var shownPacks = -1;
 function updateMegaUI(){
   var n = (P && P.mega_packs) || 0;
   var b = $('btn-open-mega');
-  if (b) b.textContent = n > 0 ? ('Ouvrir un Méga Pack offert (' + n + ' 🎁)') : 'Ouvrir (100 🪙)';
+  if (b) b.textContent = n > 0 ? ('Ouvrir un Méga Pack offert (' + n + ' 🎁)') : 'Ouvrir · 100 jetons';
   var f = $('mega-free');
   if (f){
     f.hidden = false;

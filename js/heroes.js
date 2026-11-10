@@ -72,7 +72,7 @@ function heroModalHTML(h) {
   var action;
   if (!owned) {
     var can = (P.tokens || 0) >= h.price;
-    action = '<button type="button" class="btn primary hm-buy" data-hero="' + esc(h.id) + '"' + (can ? '' : ' disabled') + '>Acheter · ' + h.price + ' 🪙</button>' +
+    action = '<button type="button" class="btn primary hm-buy" data-hero="' + esc(h.id) + '"' + (can ? '' : ' disabled') + '>Acheter · ' + h.price + ' jetons</button>' +
              (can ? '' : '<p class="hint" style="margin:6px 0 0">Il te manque ' + (h.price - (P.tokens || 0)) + ' 🪙.</p>');
   } else if (active) {
     action = '<button type="button" class="btn" disabled>✓ Héros équipé</button>';

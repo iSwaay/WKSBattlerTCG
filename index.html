@@ -5,13 +5,13 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>WKS TCG</title>
 <link rel="icon" type="image/png" href="logo.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Schibsted+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700;0,9..144,800;1,9..144,500;1,9..144,600&display=swap">
+<link rel="preload" href="fonts/fraunces.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
-<link rel="stylesheet" href="css/styles.css?v=20261104">
-<link rel="stylesheet" href="css/battle.css?v=20261104">
+<link rel="stylesheet" href="css/styles.css?v=20261110">
+<link rel="stylesheet" href="css/battle.css?v=20261110">
+<link rel="stylesheet" href="css/theme.css?v=20261110">
+<meta name="theme-color" content="#0a1026">
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true" focusable="false"><defs><linearGradient id="gold_c" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff4c2"/><stop offset="45%" stop-color="#e2b13c"/><stop offset="1" stop-color="#8a5a00"/></linearGradient><linearGradient id="face_c" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a7abb6"/><stop offset="1" stop-color="#4b4f5a"/></linearGradient><linearGradient id="rim_c" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#eceef2"/><stop offset="1" stop-color="#6b6f7a"/></linearGradient><linearGradient id="face_r" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5aa7ff"/><stop offset="1" stop-color="#143e9c"/></linearGradient><linearGradient id="rim_r" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="50%" stop-color="#a9bedb"/><stop offset="1" stop-color="#5d7393"/></linearGradient><linearGradient id="gem_r" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e6f3ff"/><stop offset="1" stop-color="#4a8ff0"/></linearGradient><linearGradient id="gold_e" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff4c2"/><stop offset="45%" stop-color="#e2b13c"/><stop offset="1" stop-color="#8a5a00"/></linearGradient><linearGradient id="face_e" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b56cff"/><stop offset="1" stop-color="#4c1d95"/></linearGradient><linearGradient id="gem_e" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe7a8"/><stop offset="1" stop-color="#e07b12"/></linearGradient><linearGradient id="gold_l" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff4c2"/><stop offset="45%" stop-color="#e2b13c"/><stop offset="1" stop-color="#8a5a00"/></linearGradient><linearGradient id="face_l" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a1550"/><stop offset="1" stop-color="#0d0820"/></linearGradient><linearGradient id="prism_l" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff6b6b"/><stop offset="20%" stop-color="#ffc24d"/><stop offset="40%" stop-color="#fff35c"/><stop offset="60%" stop-color="#5cf29a"/><stop offset="80%" stop-color="#5cc8ff"/><stop offset="1" stop-color="#a66bff"/></linearGradient></defs></svg>
@@ -96,7 +96,7 @@
                       <div style="display:flex; align-items:center; justify-content:space-between; background:var(--surface2); border:1px solid var(--line); border-radius:12px; padding:12px 14px; margin-top:16px;">
                           <span style="font-weight:600; color:var(--ink); font-size:13px;">Envie de continuer ?</span>
                           <button id="btn-buy-packs" class="btn primary" style="border:none; padding:8px 12px; font-weight:700; font-size:13px; display:flex; align-items:center; gap:6px;">
-                              10 boosters · 🪙 200
+                              10 boosters · 200 jetons
                           </button>
                       </div>
                   </div>
@@ -110,8 +110,8 @@
                   <div style="width:100%; margin-top:20px; text-align:center;">
                       <p style="margin:0 0 12px; font:500 13px var(--body); color:var(--muted); line-height:1.4;">10 cartes dont 1 Épique garantie.</p>
                       <p id="mega-free" hidden style="margin:0 0 8px; font:700 13px var(--body); color:var(--l);"></p>
-                      <button class="btn" id="btn-open-mega" type="button" style="width:100%; margin-top:12px; font-size:16px; padding:12px; background:linear-gradient(90deg, #d99a14, #f2b33a); color:#000; border:none; font-weight:700;">
-                          Ouvrir (100 🪙)
+                      <button class="btn primary" id="btn-open-mega" type="button" style="width:100%; margin-top:12px; font-size:16px; padding:12px;" data-gold>
+                          Ouvrir · 100 jetons
                       </button>
                   </div>
               </div>
@@ -231,10 +231,10 @@
 
         <section id="v-trades" hidden>
       <div class="col-head"><h2>Échanges</h2></div>
-      <div class="tabs" id="tr-tabs" style="display:flex;gap:4px;background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:3px;margin-bottom:16px;" role="tablist">
-        <button type="button" class="on" data-trtab="new" style="flex:1;border:0;background:var(--surface);padding:8px;border-radius:8px;font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,0.1)">Nouveau</button>
-        <button type="button" data-trtab="pending" style="flex:1;border:0;background:none;padding:8px;border-radius:8px;font-weight:600;color:var(--muted)">En attente <span id="tr-badge" style="background:var(--danger);color:#fff;padding:2px 6px;border-radius:99px;font-size:10px;margin-left:4px" hidden>0</span></button>
-        <button type="button" data-trtab="history" style="flex:1;border:0;background:none;padding:8px;border-radius:8px;font-weight:600;color:var(--muted)">Historique</button>
+      <div class="sub-tabs" id="tr-tabs" role="tablist">
+        <button type="button" class="on" data-trtab="new">Nouveau</button>
+        <button type="button" data-trtab="pending">En attente <span id="tr-badge" class="tr-badge" hidden>0</span></button>
+        <button type="button" data-trtab="history">Historique</button>
       </div>
 
       <div id="tr-view-new">
@@ -370,18 +370,18 @@
       <div id="arena-view-shop" style="display:none">
           <p class="muted" style="margin-top:0;margin-bottom:16px">Achète des objets avec tes jetons 🪙</p>
           <div class="grid">
-            <div class="panel" style="text-align:center;padding:16px;border:2px solid var(--line)">
+            <div class="panel shop-item">
                <div style="font-size:40px;margin-bottom:10px">❤️</div>
                <h3 style="margin:0 0 4px">Potion de Soin</h3>
                <p class="hint" style="margin-bottom:12px;min-height:36px">Restaure 50 HP en plein combat.</p>
-               <button type="button" class="btn primary btn-buy" data-item="potion_soin" data-price="20">Acheter (20 🪙)</button>
+               <button type="button" class="btn primary btn-buy" data-item="potion_soin" data-price="20">Acheter · 20 jetons</button>
                <p class="hint" style="margin-top:8px">En stock : <b id="inv-potion_soin">0</b></p>
             </div>
-            <div class="panel" style="text-align:center;padding:16px;border:2px solid var(--ur)">
+            <div class="panel shop-item">
                <div style="font-size:40px;margin-bottom:10px">⚡</div>
                <h3 style="margin:0 0 4px">Potion d'Énergie</h3>
                <p class="hint" style="margin-bottom:12px;min-height:36px">Restaure 2 Énergies instantanément.</p>
-               <button type="button" class="btn primary btn-buy" data-item="potion_energie" data-price="30" style="background:var(--ur);border-color:var(--ur)">Acheter (30 🪙)</button>
+               <button type="button" class="btn primary btn-buy" data-item="potion_energie" data-price="30">Acheter · 30 jetons</button>
                <p class="hint" style="margin-top:8px">En stock : <b id="inv-potion_energie">0</b></p>
             </div>
           </div>
@@ -484,21 +484,21 @@
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 <div class="modal" id="auth" role="dialog" aria-modal="true" aria-label="Connexion"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="js/config.js?v=20261104"></script>
-<script src="js/core.js?v=20261104"></script>
-<script src="js/card-render.js?v=20261104"></script>
-<script src="js/pack-reveal.js?v=20261104"></script>
-<script src="js/packs.js?v=20261104"></script>
-<script src="js/collection.js?v=20261104"></script>
-<script src="js/auth.js?v=20261104"></script>
-<script src="js/admin.js?v=20261104"></script>
-<script src="js/effects.js?v=20261104"></script>
-<script src="js/social.js?v=20261104"></script>
-<script src="js/heroes.js?v=20261104"></script>
-<script src="js/decks.js?v=20261104"></script>
-<script src="js/battle-art.js?v=20261104"></script>
-<script src="js/battle.js?v=20261104"></script>
-<script src="js/events.js?v=20261104"></script>
-<script src="js/pack-carousel.js?v=20261104"></script>
+<script src="js/config.js?v=20261110"></script>
+<script src="js/core.js?v=20261110"></script>
+<script src="js/card-render.js?v=20261110"></script>
+<script src="js/pack-reveal.js?v=20261110"></script>
+<script src="js/packs.js?v=20261110"></script>
+<script src="js/collection.js?v=20261110"></script>
+<script src="js/auth.js?v=20261110"></script>
+<script src="js/admin.js?v=20261110"></script>
+<script src="js/effects.js?v=20261110"></script>
+<script src="js/social.js?v=20261110"></script>
+<script src="js/heroes.js?v=20261110"></script>
+<script src="js/decks.js?v=20261110"></script>
+<script src="js/battle-art.js?v=20261110"></script>
+<script src="js/battle.js?v=20261110"></script>
+<script src="js/events.js?v=20261110"></script>
+<script src="js/pack-carousel.js?v=20261110"></script>
 </body>
 </html>

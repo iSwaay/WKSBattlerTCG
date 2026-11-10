@@ -1,0 +1,244 @@
+/* =====================================================================
+   WKS TCG — habillage du site (chargé après styles.css et battle.css)
+   Bleu nuit royal + or + gemme saphir, repris du logo et des cadres de cartes.
+   Ce fichier ne change que l'apparence : aucune règle de mise en page du jeu.
+   ===================================================================== */
+
+@font-face{font-family:'Fraunces';src:url("../fonts/fraunces.woff2") format("woff2");font-weight:100 900;font-style:normal;font-display:swap}
+@font-face{font-family:'Fraunces';src:url("../fonts/fraunces-italic.woff2") format("woff2");font-weight:100 900;font-style:italic;font-display:swap}
+@font-face{font-family:'Schibsted Grotesk';src:url("../fonts/schibsted-grotesk.woff2") format("woff2");font-weight:400 900;font-style:normal;font-display:swap}
+
+/* ---------- jetons de couleur (thème unique, sombre) ---------- */
+html:root:root{
+  color-scheme:dark;
+  --bg:#070b1a; --surface:#131d42; --surface2:#0b1230; --ink:#f5ecd6; --muted:#a3aed0; --line:#2c3d7a;
+  --accent:#f2c14e; --accent-ink:#2b1a00; --danger:#ff7468; --ur:#ffd76a;
+  --c:#a9afbd; --r:#58a6ff; --e:#b684ff; --l:#f5c451; --cx-green:#74e39c;
+  --gold-hi:#fff0b8; --gold:#f2c14e; --gold-lo:#b97f1a; --gold-deep:#6f4708;
+  --navy-hi:#27397c; --navy:#16224e; --navy-lo:#0c1433; --gem:#3b9bff;
+  --display:'Fraunces',Georgia,'Times New Roman',serif;
+  --body:'Schibsted Grotesk',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --mono:'Schibsted Grotesk',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --lip:0 3px 0 #050916;
+  --gemsvg:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M10 1 19 10 10 19 1 10Z' fill='%23f2c14e'/%3E%3Cpath d='M10 4 16 10 10 16 4 10Z' fill='%232f7dea'/%3E%3Cpath d='M10 4 16 10H4Z' fill='%236fc0ff'/%3E%3C/svg%3E");
+}
+
+body{
+  font:15px/1.5 var(--body);
+  background:
+    radial-gradient(900px 420px at 50% -120px,rgba(54,104,235,.34),transparent 70%),
+    radial-gradient(700px 380px at 100% 100%,rgba(242,193,78,.07),transparent 70%),
+    linear-gradient(180deg,#0a1026 0%,#070b1a 55%,#05081a 100%) fixed;
+  background-color:var(--bg);
+}
+::selection{background:var(--gold);color:#221400}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+*{scrollbar-color:#33478c #0a1026}
+
+/* ---------- titres ---------- */
+h1,.col-head h2,.panel h2,.cx-title,.stat-box b,.cx-stat b,.count{
+  font-family:var(--display);font-variation-settings:"SOFT" 100,"WONK" 0;font-weight:800;letter-spacing:.005em;
+}
+.col-head h2,.panel h2,.cx-title{
+  background:linear-gradient(180deg,var(--gold-hi) 8%,var(--gold) 52%,var(--gold-lo) 96%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;
+  filter:drop-shadow(0 2px 0 rgba(0,0,0,.55));
+}
+.col-head h2{font-size:clamp(28px,5vw,38px);line-height:1.1}
+/* filet doré + gemme sous les titres de page */
+.col-head h2::after{
+  content:"";display:block;height:14px;margin-top:8px;
+  background:var(--gemsvg) center/14px 14px no-repeat,
+    linear-gradient(90deg,transparent,var(--gold-lo) 30%,var(--gold) 50%,var(--gold-lo) 70%,transparent) center/100% 2px no-repeat;
+  min-width:120px;
+}
+.panel h2{font-size:28px}
+.panel h3,.rates-h{font:700 13px var(--body);letter-spacing:.02em;text-transform:none;color:var(--gold)}
+.cx-eyebrow{display:none}
+.cx-title{font-size:clamp(30px,7vw,46px);margin-bottom:14px}
+.muted,.hint{color:var(--muted)}
+
+/* ---------- barre du haut ---------- */
+.top{padding:2px 0 4px}
+.brand img{height:58px!important;filter:drop-shadow(0 4px 10px rgba(0,0,0,.6))!important}
+.adm-flag{font:700 11px var(--body);letter-spacing:.04em;text-transform:none;color:#bfe0ff;border:1px solid #3b6fd0;background:rgba(47,125,234,.18);border-radius:99px;padding:4px 10px}
+#h-tokens{
+  font:800 17px/1 var(--display)!important;font-variation-settings:"SOFT" 100;color:var(--gold-hi)!important;gap:8px!important;
+  background:linear-gradient(180deg,#1b2a60,#0e1738)!important;border:1px solid var(--gold-lo)!important;border-radius:99px!important;padding:8px 16px 8px 10px!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.12),var(--lip);
+}
+
+/* ---------- boutons ---------- */
+.btn,.pk-btn,.cx-icon-btn,.cx-rbtn,.chip{
+  background:linear-gradient(180deg,var(--navy-hi),var(--navy));border:1px solid #40589f;color:var(--ink);
+  border-radius:12px;font-weight:700;box-shadow:inset 0 1px 0 rgba(255,255,255,.14),var(--lip);
+  transition:transform .08s,filter .15s,box-shadow .08s;
+}
+.btn:hover,.pk-btn:hover,.cx-icon-btn:hover,.cx-rbtn:hover,.chip:hover{border-color:#6c86d6;filter:brightness(1.12)}
+.btn:active,.pk-btn:active,.cx-icon-btn:active,.cx-rbtn:active,.chip:active{transform:translateY(2px);box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 1px 0 #050916}
+.btn.primary,.btn.on,.pk-btn.rc-go,.pk-btn.primary{
+  background:linear-gradient(180deg,#ffe592 0%,var(--gold) 48%,#d6992a 100%);border:1px solid var(--gold-deep);color:var(--accent-ink);
+  text-shadow:0 1px 0 rgba(255,255,255,.45);box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 3px 0 var(--gold-deep),0 8px 18px rgba(242,193,78,.18);
+}
+.btn.primary:hover,.btn.on:hover{border-color:var(--gold-deep);filter:brightness(1.08)}
+.btn.primary:active{box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 1px 0 var(--gold-deep)}
+.btn.primary:disabled,.btn:disabled,.pk-btn.rc-go:disabled{
+  background:linear-gradient(180deg,#1a2347,#131a38);border:1px solid #2a3564;color:#6f7aa3;text-shadow:none;box-shadow:none;cursor:not-allowed;filter:none;transform:none;
+}
+.btn.danger{color:#ffb0a8;border-color:#8a3a3a;background:linear-gradient(180deg,#4a1d2a,#30121d)}
+.btn.sm{border-radius:10px;box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 2px 0 #050916}
+.btn.primary.sm{box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 2px 0 var(--gold-deep)}
+.chip.on{background:linear-gradient(180deg,#ffe592,var(--gold));color:var(--accent-ink);border-color:var(--gold-deep)}
+.btn-arrow{color:var(--gold)}
+.btn-arrow:hover{color:var(--gold-hi)}
+.btn-arrow.pk-arr{background:linear-gradient(180deg,var(--navy-hi),var(--navy-lo));border:1px solid var(--gold-lo);color:var(--gold-hi);box-shadow:var(--lip)}
+.btn-arrow.pk-arr:hover{background:linear-gradient(180deg,#3148a0,var(--navy));color:#fff}
+
+/* ---------- champs ---------- */
+input[type=text],input[type=password],input[type=email],input[type=number],input[type=search],select,textarea,.search-input{
+  background:#080e26;border:1px solid #2f4388;border-radius:11px;color:var(--ink);box-shadow:inset 0 2px 5px rgba(0,0,0,.5);
+}
+input::placeholder,textarea::placeholder{color:#6f7ba6}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold);box-shadow:inset 0 2px 5px rgba(0,0,0,.5),0 0 0 3px rgba(242,193,78,.2)}
+label{color:#d9dff2}
+.cx-search{background:#080e26;border:1px solid #2f4388;border-radius:12px;box-shadow:inset 0 2px 5px rgba(0,0,0,.5)}
+.cx-search input{background:none;border:0;box-shadow:none}
+.cx-search input:focus{box-shadow:none}
+.cx-search:focus-within{border-color:var(--gold)}
+
+/* ---------- panneaux, cartouches, lignes ---------- */
+.panel,.bt-mode,.stat-box,.cx-stat,.dkc,.hm-lvl,.hm-perk,.hm-stats div,.cx-menu,#plus-menu,.rc-bar{
+  background:linear-gradient(180deg,#18265a 0%,#0f1838 100%);border:1px solid #33488f;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 10px 24px rgba(0,0,0,.35);
+}
+.panel{border-radius:18px;border:2px solid var(--gold-lo);box-shadow:inset 0 0 0 1px #070b1a,inset 0 2px 0 rgba(255,240,184,.12),0 24px 60px rgba(0,0,0,.6)}
+.panel.dkc{border-width:1px;border-color:#33488f;box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 10px 24px rgba(0,0,0,.35)}
+.dkc.ok{border-color:#3fbf78}
+.sec{border-top:1px solid #2a3b78}
+.trade-row,.crow,.acc,.rate,.heroes-count,.dke-count,.trade-status{background:#0d1638;border:1px solid #2c3d7a;border-radius:12px}
+.acc .crow{background:#121d48}
+.modal{background:rgba(3,5,14,.78);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.empty-col,.placeholder-page{border:1px dashed #33488f;border-radius:14px;background:rgba(19,29,66,.4);color:var(--muted)}
+.toast{background:linear-gradient(180deg,#ffe592,var(--gold));color:var(--accent-ink);border:1px solid var(--gold-deep);border-radius:12px;font-weight:800;box-shadow:0 3px 0 var(--gold-deep),0 14px 30px rgba(0,0,0,.5)}
+
+/* chiffres clés */
+.stat-box{border-radius:14px}
+.stat-box b,.cx-stat b{font-size:34px;color:var(--gold-hi);text-shadow:0 2px 0 rgba(0,0,0,.5)}
+.stat-box span,.cx-lab{font:600 12px var(--body);letter-spacing:.01em;text-transform:none;color:var(--muted)}
+.cx-bar{height:12px;background:#080e26;border:1px solid #2c3d7a;box-shadow:inset 0 2px 4px rgba(0,0,0,.6)}
+.bar{background:#080e26;border-color:#2c3d7a}
+.bar i{background:linear-gradient(90deg,var(--gold-lo),var(--gold-hi))}
+.vitrine-slot{background:#0b1230;border:2px dashed #33488f;border-radius:10px;color:#5d6ba0}
+.vitrine-slot:hover{border-color:var(--gold);color:var(--gold)}
+
+/* ---------- onglets ---------- */
+.sub-tabs{background:#080e26;border:1px solid #2c3d7a;border-radius:14px;padding:4px;box-shadow:inset 0 2px 6px rgba(0,0,0,.55)}
+.sub-tabs button{border-radius:10px;color:var(--muted);padding:9px 8px;font-weight:700;background:none!important;box-shadow:none!important;white-space:nowrap}
+.sub-tabs button:hover{color:var(--ink)}
+.sub-tabs button.on{
+  background:linear-gradient(180deg,var(--navy-hi),var(--navy))!important;color:var(--gold-hi);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.16),inset 0 -2px 0 var(--gold),0 2px 0 #050916!important;
+}
+@media (max-width:480px){.sub-tabs{overflow-x:auto;scrollbar-width:none}.sub-tabs button{flex:1 0 auto;padding:9px 12px}}
+
+/* ---------- barre de navigation ---------- */
+.bottom-nav{
+  background:linear-gradient(180deg,#17245a,#0a1030);border-top:2px solid var(--gold-lo);
+  box-shadow:0 -1px 0 #050916,0 -10px 30px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,240,184,.18);
+  justify-content:center;
+}
+.bottom-nav button{position:relative;max-width:150px;color:#8f9cc8;font:700 11px var(--body);padding:11px 2px 9px;transition:color .15s}
+.bottom-nav button:hover{color:var(--ink)}
+.bottom-nav button.on{color:var(--gold-hi)}
+.bottom-nav button.on svg{filter:drop-shadow(0 0 8px rgba(242,193,78,.65))}
+.bottom-nav button.on::before{content:"";position:absolute;top:-9px;left:50%;width:16px;height:16px;margin-left:-8px;background:var(--gemsvg) center/contain no-repeat;filter:drop-shadow(0 2px 3px rgba(0,0,0,.6))}
+#plus-menu{border-radius:14px;border-color:var(--gold-lo);padding:6px}
+.pm-item{border-radius:9px;font-weight:600}
+.pm-item:hover{background:rgba(255,255,255,.07)}
+.pm-item svg{color:var(--gold)}
+
+/* ---------- page boosters ---------- */
+.pk-seg{background:#1b2755;border-radius:3px;box-shadow:inset 0 1px 2px rgba(0,0,0,.6)}
+.pk-seg.on{background:linear-gradient(180deg,var(--gold-hi),var(--gold));box-shadow:0 0 8px rgba(242,193,78,.55)}
+.pk-item{--halo:rgba(70,130,255,.6)}
+.prob-details summary::before{border-left-color:var(--gold)}
+.rate{font:600 12px var(--body)}
+.mega-badge,.stack-badge,.qty{background:linear-gradient(180deg,#ffe592,var(--gold));color:var(--accent-ink);border:1px solid var(--gold-deep);font-family:var(--body)}
+
+/* ---------- collection ---------- */
+.cx-pill{border-radius:12px;box-shadow:inset 0 1px 0 rgba(255,255,255,.1),var(--lip);background:linear-gradient(180deg,#143a34,#0d2824);border-color:#2f8f66}
+.cx-pill.on{background:linear-gradient(180deg,#1f6a4f,#144a38)}
+.cx-pill.cx-pill-alt{background:linear-gradient(180deg,var(--navy-hi),var(--navy));border-color:#40589f}
+.cx-pill.cx-pill-alt.on{border-color:var(--e);background:linear-gradient(180deg,#3a2c78,#241b52)}
+.cx-rbtn{border-radius:50%}
+.cx-rbtn.on{border-color:var(--gold);background:linear-gradient(180deg,#3a3418,#231e0c);box-shadow:0 0 0 2px rgba(242,193,78,.35),var(--lip)}
+.cx-icon-btn[aria-expanded="true"]{border-color:var(--gold)}
+.cx-sort-item:hover,.cx-sort-item.on{background:rgba(255,255,255,.07)}
+.cx-lg-c .cx-lgn{color:var(--c)}
+.unk{background:#0b1230;border-color:#2c3d7a}
+.rc-mode .slot.rc-sel::after{background:var(--gold);color:var(--accent-ink)}
+.rc-bar{border-color:var(--gold-lo);border-radius:16px}
+.zdot.on::before{background:var(--gold)}
+
+/* ---------- héros / decks ---------- */
+.hcard{border-radius:14px;box-shadow:0 0 0 2px #33488f,0 8px 18px rgba(0,0,0,.45)}
+.hcard.active{box-shadow:0 0 0 3px var(--gold),0 0 22px rgba(242,193,78,.4),0 10px 26px rgba(0,0,0,.4)}
+.hcard:focus-visible{outline-color:var(--gold)}
+.hc-tag{background:linear-gradient(180deg,#ffe592,var(--gold));color:var(--accent-ink);text-transform:none;font-size:11px}
+.hm-arch{font:600 13px var(--body);letter-spacing:0;text-transform:none;color:var(--gem)}
+.hm-perk b{font:800 12px var(--body);letter-spacing:.01em;text-transform:none}
+.hm-bar,.hm-pip{background:#080e26}
+.dk-tile{background:#0f1838}
+.dke-slots{background:#080e26;border-color:#2c3d7a}
+.dk-empty{border-color:#2c3d7a}
+.dkc-th{background:#080e26}
+.dkc-rar .dk-r-l,.dk-sk-l{color:var(--l)}
+.dkc-badge.warn{color:var(--gold)}
+
+/* ---------- menu de l'arène ---------- */
+.bt-mode{border-radius:16px}
+.bt-mode h3{font:800 20px/1.15 var(--display);font-variation-settings:"SOFT" 100;color:var(--gold-hi)}
+.bt-lbl{font:600 12px var(--body);letter-spacing:0;text-transform:none;color:var(--muted)}
+.bt-mode.soon,.bt-mode:has(button:disabled){opacity:.78}
+
+/* ---------- connexion ---------- */
+#auth{
+  background:
+    radial-gradient(ellipse at 50% 40%,rgba(7,11,26,.35),rgba(7,11,26,.92) 75%),
+    url("../img/ui/fond.webp") center/cover no-repeat,#070b1a;
+  display:grid;align-items:start;justify-items:center;
+}
+#auth[hidden]{display:none}
+#auth .panel{width:min(440px,100%);margin-top:5vh!important;gap:16px}
+#auth .panel-h{justify-content:center}
+.auth-logo{display:block;width:min(240px,62%);height:auto;margin:-58px auto -18px;filter:drop-shadow(0 8px 18px rgba(0,0,0,.7))}
+.auth-tabs{display:flex;gap:4px;background:#080e26;border:1px solid #2c3d7a;border-radius:14px;padding:4px;box-shadow:inset 0 2px 6px rgba(0,0,0,.55)}
+.auth-tabs button{flex:1;border:0;background:none;padding:10px;border-radius:10px;font-weight:700;font-size:14px;color:var(--muted)}
+.auth-tabs button.on{background:linear-gradient(180deg,var(--navy-hi),var(--navy));color:var(--gold-hi);box-shadow:inset 0 1px 0 rgba(255,255,255,.16),inset 0 -2px 0 var(--gold),0 2px 0 #050916}
+#auth-form .btn.primary{padding:13px;font-size:16px;margin-top:4px}
+
+@media (max-width:520px){
+  .brand img{height:46px!important}
+  .top{gap:8px}
+  .top .btn{padding:8px 11px}
+}
+@media (prefers-reduced-motion:reduce){.btn,.pk-btn{transition:none}}
+.tr-badge{background:var(--danger);color:#fff;padding:2px 7px;border-radius:99px;font-size:11px;margin-left:4px}
+
+/* ---------- retouches ---------- */
+/* treillis de losanges (dos de carte du logo), très discret */
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.05;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56'%3E%3Cpath d='M28 2 54 28 28 54 2 28Z' fill='none' stroke='%23f2c14e' stroke-width='1'/%3E%3C/svg%3E") 0 0/56px 56px;
+  -webkit-mask-image:linear-gradient(180deg,#000,transparent 70%);mask-image:linear-gradient(180deg,#000,transparent 70%)}
+/* seuls les panneaux en fenêtre (modales) portent le cadre doré ; les panneaux de page restent sobres */
+main .panel:not(.dkc){border:1px solid #33488f;box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 10px 24px rgba(0,0,0,.35)}
+.brand img{height:76px!important;margin:-12px 0 -14px -8px}
+@media (max-width:520px){.brand img{height:62px!important;margin:-10px 0 -12px -8px}}
+.brand img{height:88px!important;margin:-16px 0 -18px -10px}
+@media (max-width:520px){.brand img{height:70px!important;margin:-12px 0 -14px -10px}}
+main .panel.shop-item{text-align:center;padding:18px 14px;gap:8px}
+.shop-item h3{font:800 18px/1.2 var(--display);font-variation-settings:"SOFT" 100;color:var(--gold-hi)}
+.shop-item .btn{width:100%}
+.brand img{height:108px!important;margin:-26px 0 -28px -16px}
+@media (max-width:520px){.brand img{height:84px!important;margin:-18px 0 -20px -12px}}
+.shop-item .btn{white-space:nowrap;font-size:13.5px;padding:9px 6px}

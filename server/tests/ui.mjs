@@ -41,7 +41,7 @@ const srv = http.createServer((req, res) => {
 }).listen(0);
 const PORT = srv.address().port;
 const combat = html.slice(html.indexOf('<div id="arena-view-combat">'), html.indexOf('<div id="arena-view-decks"'));
-const page_html = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/css/styles.css"><link rel="stylesheet" href="/css/battle.css"></head><body><div class="wrap" style="padding:12px"><div id="app">${combat}</div></div></body></html>`;
+const page_html = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/css/styles.css"><link rel="stylesheet" href="/css/battle.css"><link rel="stylesheet" href="/css/theme.css"></head><body><div class="wrap" style="padding:12px"><div id="app">${combat}</div></div></body></html>`;
 pageHtml = page_html;
 const browser = await chromium.launch();
 for (const [name, w, h] of [['desktop', 1280, 900], ['mobile', 390, 900]]) {

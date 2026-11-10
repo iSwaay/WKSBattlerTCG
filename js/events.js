@@ -223,9 +223,6 @@ document.addEventListener('click', async function(e){
       document.querySelectorAll('#tr-tabs button').forEach(function(b){
           var on = b===tabBtn;
           b.classList.toggle('on', on);
-          b.style.background = on ? 'var(--surface)' : 'none';
-          b.style.color = on ? 'inherit' : 'var(--muted)';
-          b.style.boxShadow = on ? '0 1px 2px rgba(0,0,0,0.1)' : 'none';
       });
       ['new', 'pending', 'history'].forEach(function(v){
           $('tr-view-'+v).style.display = (v === targetId) ? 'block' : 'none';
