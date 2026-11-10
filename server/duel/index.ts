@@ -17,9 +17,16 @@ async function skillMap() {
 }
 const toCard = (inst, sk) => {
   const link = one(inst.card_instance_skills); const skill = link && sk[link.skill_id];
-  return skill ? { card_id: inst.card_id, instance_id: inst.instance_id, hp: inst.hp, atk: inst.attack, def: inst.defense, skill } : null;
+  const card = one(inst.cards);
+  return skill ? { card_id: inst.card_id, instance_id: inst.instance_id, rarity: (card && card.rarity) || 'C', hp: inst.hp, atk: inst.attack, def: 0, skill } : null;
 };
-const INST_SEL = 'instance_id, card_id, hp, attack, defense, card_instance_skills(skill_id)';
+const INST_SEL = 'instance_id, card_id, hp, attack, defense, cards(rarity), card_instance_skills(skill_id)';
+const RAR_NAME = { L: 'Légendaire', E: 'Épique', R: 'Rare', C: 'Commune' };
+async function rarityLimits() { return (await admin.from('game_config').select('value').eq('key', 'deck_rarity_limits').maybeSingle()).data?.value || {}; }
+function overLimits(cards, lim) {
+  const n = {}; cards.forEach((c) => { n[c.rarity] = (n[c.rarity] || 0) + 1; });
+  return Object.keys(lim).filter((r) => (n[r] || 0) > lim[r]).map((r) => n[r] + ' ' + RAR_NAME[r] + (n[r] > 1 ? 's' : '') + ' (max ' + lim[r] + ')');
+}
 
 async function playerSide(uid, deckId, cfg, sk) {
   const { data: deck } = await admin.from('decks').select('id').eq('id', deckId).eq('user_id', uid).maybeSingle();
@@ -30,6 +37,8 @@ async function playerSide(uid, deckId, cfg, sk) {
   const { data: insts } = await admin.from('card_instances').select(INST_SEL).in('instance_id', ids).eq('user_id', uid);
   const cards = (insts || []).map((i) => toCard(i, sk)).filter(Boolean);
   if (cards.length !== 20) return { error: 'Deck invalide : une carte a changé de propriétaire ou n\'a pas de skill.' };
+  const bad = overLimits(cards, await rarityLimits());
+  if (bad.length) return { error: 'Ce deck dépasse la limite de raretés : ' + bad.join(', ') + '. Modifie-le dans l\'onglet Decks.' };
   const { data: prof } = await admin.from('profiles').select('active_hero').eq('id', uid).maybeSingle();
   const heroId = (prof && prof.active_hero) || 'pionnier';
   const [{ data: hrow }, { data: uh }] = await Promise.all([admin.from('heroes').select('*').eq('id', heroId).maybeSingle(), admin.from('user_heroes').select('level').eq('user_id', uid).eq('hero_id', heroId).maybeSingle()]);
@@ -113,8 +122,23 @@ Deno.serve(async (req) => {
     const { data: ud } = await admin.auth.getUser(token);
     const uid = ud && ud.user && ud.user.id; if (!uid) return json({ error: 'Session expirée : reconnecte-toi.' }, 401);
     const body = await req.json().catch(() => ({})); const now = Date.now();
-    const cfg = await loadCfg();
     const a = body.action;
+
+    // replay synchronisé : vitesse (×1/×2/×4) et « Passer » s'appliquent aux deux joueurs
+    if (a === 'replay_set' || a === 'replay_get') {
+      const { data: row } = await admin.from('duels').select('id, host_id, guest_id, replay').eq('id', body.duel_id).maybeSingle();
+      if (!row || (row.host_id !== uid && row.guest_id !== uid)) return json({ error: 'Duel introuvable.' });
+      let rp = row.replay || {};
+      if (a === 'replay_set') {
+        // vitesse : partagée pour tout le duel ; « Passer » : pour la manche indiquée
+        if ([1, 2, 4].includes(body.speed)) rp.speed = body.speed;
+        if (body.skip === true && Number(body.round) > 0) rp.skip_round = Number(body.round);
+        await admin.from('duels').update({ replay: rp }).eq('id', row.id);
+      }
+      return json({ ok: true, now, replay: rp });
+    }
+
+    const cfg = await loadCfg();
 
     if (a === 'create') {
       const cur = await activeDuel(uid);

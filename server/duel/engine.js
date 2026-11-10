@@ -25,7 +25,7 @@ export function buildCfg(configRows, starRows) {
     offer_size: g.offer_size ?? 3, reroll_cost: g.reroll_cost ?? 1,
     energy: g.energy ?? { cap: 10, start: 1, per_round: 1 },
     merge_count: g.merge_count ?? 3, max_stars: g.max_stars ?? 5,
-    hero_damage: g.hero_damage ?? { base_per_round: 1, per_surviving_star: 1 },
+    hero_damage: g.hero_damage ?? { by_rarity: { L: 1, E: 2, R: 3, C: 4 } },
     combat: g.combat ?? { max_ticks: 30, min_damage: 1 },
     prep_seconds: g.prep_seconds ?? 30, max_rounds: 40, stars,
   };
@@ -194,7 +194,7 @@ export function act(st, cfg, sd, a, now) {
       if (!isFinite(cost)) return { error: 'Cette carte ne peut pas être jouée avec ce héros.' };
       if (cost > side.energy) return { error: 'Pas assez d\'énergie.' };
       side.energy -= cost; side.first_bought = true; if (c.skill.category === 'attack') side.first_attack_bought = true;
-      const card = { uid: 'u' + (++st.uid), card_id: c.card_id, instance_id: c.instance_id || null, hp: c.hp, atk: c.atk, def: c.def, skill: c.skill, stars: 1, paid: cost };
+      const card = { uid: 'u' + (++st.uid), card_id: c.card_id, instance_id: c.instance_id || null, hp: c.hp, atk: c.atk, def: 0, rarity: c.rarity || 'C', skill: c.skill, stars: 1, paid: cost };
       side.board[a.slot] = card; side.offer[a.i] = null;
       onPlay(st, cfg, sd, card); checkFusion(st, cfg, sd, sd === 'bot');
       return { ok: true };
@@ -261,7 +261,7 @@ export function botPrep(st, cfg) {
 function mkUnit(sd, slot, c, hero, cfg) {
   const fx = hero.fx; let hp = c.hp, atk = c.atk;
   if (fx.cheap_card_max_cost != null && c.skill.cost <= fx.cheap_card_max_cost) { hp = Math.round(hp * (1 + fx.cheap_card_hp_pct / 100)); atk = Math.round(atk * (1 + fx.cheap_card_atk_pct / 100)); }
-  return { id: sd + '.' + slot, side: sd, slot, lane: LANE[slot], card: c, hp, maxHp: hp, atk, def: c.def, shield: 0, mods: [], sts: [], attacks: 0,
+  return { id: sd + '.' + slot, side: sd, slot, lane: LANE[slot], card: c, hp, maxHp: hp, atk, def: 0, shield: 0,   /* la DEF n'existe plus : seuls ATQ et PV comptent */ mods: [], sts: [], attacks: 0,
     used: 0, cdLeft: 0, dead: false, hpFired: false, deathFired: false, killed: false, negate: 0, swap: 0, stars: c.stars,
     skill: scaleSkill(c.skill, cfg.stars[c.stars]?.skill_boost_pct || 0) };
 }
@@ -424,7 +424,17 @@ export function simulate(cfg, st) {
     u.attacks++;
     ev.push({ k: 'atk', a: u.id, d: t.id });
     let raw = effStats(u).atk * (1 + (fxOf(u).attack_damage_pct_bonus || 0) / 100);
-    hit(u, t, raw);
+    // « Ses attaques ignorent X % de la DEF » / « vol de vie » : s'appliquent aussi à l'attaque normale
+    const sk = u.skill; let pen = 0, ls = 0;
+    if (sk.trigger === 'on_attack' && (sk.pen || sk.ls) && !hasSt(u, 'silence')) {
+      pen = sk.pen; ls = sk.ls; const fx0 = fxOf(u);
+      if (fx0.disable_secondary_effects && !(fx0.keep_secondary_chance_pct && rnd(R) * 100 < fx0.keep_secondary_chance_pct)) {
+        if (fx0.disable_secondary_effects.includes('ignore_def')) pen = 0;
+        if (fx0.disable_secondary_effects.includes('lifesteal')) ls = 0;
+      }
+    }
+    const dealt = hit(u, t, raw, { pen });
+    if (ls > 0 && dealt > 0) heal(u, healAmt(u, ls, dealt));
     if (u.hp > 0) { fire(u, 'on_attack', { target: t }); fire(u, 'every_n_attacks', { target: t }); }
     const bl = u.sts.find((x) => x.t === 'bleed'); if (bl) loss(u, Math.max(1, Math.round(u.maxHp * bl.v / 100)), 'bleed');
     const fx = fxOf(u);
@@ -479,7 +489,10 @@ export function simulate(cfg, st) {
     const a = pct('me'), b = pct('bot'); winner = Math.abs(a - b) < 1e-9 ? 'draw' : a > b ? 'me' : 'bot';
   }
   const stars = winner === 'draw' ? 0 : units.filter((u) => u.side === winner && u.hp > 0).reduce((a, u) => a + u.stars, 0);
-  return { winner, ticks, init, heroDmg, heroHeal, energyDrain, survivorStars: stars };
+  // dégâts au héros perdant : chaque carte gagnante encore en vie inflige selon sa rareté (une Légendaire survit mieux : elle tape moins)
+  const byR = (cfg.hero_damage && cfg.hero_damage.by_rarity) || { L: 1, E: 2, R: 3, C: 4 };
+  const survivorDmg = winner === 'draw' ? 0 : units.filter((u) => u.side === winner && u.hp > 0).reduce((a, u) => a + (byR[u.card.rarity] ?? byR.C ?? 4), 0);
+  return { winner, ticks, init, heroDmg, heroHeal, energyDrain, survivorStars: stars, survivorDmg };
 }
 
 /* ---------- fin de préparation → combat → manche suivante ---------- */
@@ -494,7 +507,7 @@ export function endPrep(st, cfg, now) {
   const r = simulate(cfg, st);
   const loserOf = r.winner === 'me' ? 'bot' : r.winner === 'bot' ? 'me' : null;
   const lossHero = { me: 0, bot: 0 };
-  if (loserOf) lossHero[loserOf] += st.round * cfg.hero_damage.base_per_round + r.survivorStars * cfg.hero_damage.per_surviving_star;
+  if (loserOf) lossHero[loserOf] += cfg.hero_damage.by_rarity ? r.survivorDmg : st.round * cfg.hero_damage.base_per_round + r.survivorStars * cfg.hero_damage.per_surviving_star;
   for (const s of ['me', 'bot']) {
     lossHero[s] += r.heroDmg[s];
     st[s].hero.hp = Math.min(st[s].hero.max_hp, st[s].hero.hp + r.heroHeal[s]) - lossHero[s];

@@ -120,6 +120,27 @@ async function dlIncoming(v, reward) {
   else { cur.deadline = v.deadline; cur.prep_start = v.prep_start; }
 }
 
+/* ---------- replay synchronisé : vitesse ×1/×2/×4 et « Passer » valent pour les deux joueurs ---------- */
+function dlReplaySend(o) {
+  if (!BT.pvp || !BT.id) return;
+  dlCall(Object.assign({ action: 'replay_set', duel_id: BT.id, round: BT.replayRound || 0 }, o)).then(function(r){ if (r && r.replay) dlReplayApply(r.replay); });
+}
+function dlReplayApply(rp) {
+  if (!rp) return;
+  if ([1, 2, 4].indexOf(rp.speed) >= 0 && rp.speed !== BT.speed) { BT.speed = rp.speed; var b = $('bt-spd'); if (b) b.textContent = '×' + BT.speed; }
+  if (BT.replaying && rp.skip_round && rp.skip_round === BT.replayRound) BT.skip = true;
+}
+function dlReplayWatch(round) {
+  dlReplayStop(); var busy = false, id = BT.id;
+  var tick = async function() {
+    if (busy || !BT.pvp || BT.id !== id) return;
+    busy = true; var r = await dlCall({ action: 'replay_get', duel_id: id }); busy = false;
+    if (r && r.replay) dlReplayApply(r.replay);
+  };
+  tick(); DL.rpT = setInterval(tick, 700);
+}
+function dlReplayStop() { if (DL.rpT) { clearInterval(DL.rpT); DL.rpT = null; } }
+
 /* ---------- événements ---------- */
 document.addEventListener('click', async function(e) {
   var t = e.target;

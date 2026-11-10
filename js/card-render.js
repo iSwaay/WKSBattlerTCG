@@ -1,19 +1,19 @@
 'use strict';
 /* Rendu HTML d'une carte */
 
-function calculateNote(r, hp, atk, def) {
+/* note sur 10 : position des PV et de l'ATQ dans la fourchette de la rareté (la défense n'existe plus) */
+function calculateNote(r, hp, atk) {
     if (!hp) return '?';
     var ranges = {
-        'C': {hp:[80,170], atk:[15,38], def:[5,23]},
-        'R': {hp:[140,230], atk:[28,65], def:[15,34]},
-        'E': {hp:[200,270], atk:[50,85], def:[25,42]},
-        'L': {hp:[240,320], atk:[70,110], def:[35,55]}
+        'C': {hp:[80,170], atk:[15,38]},
+        'R': {hp:[140,230], atk:[28,65]},
+        'E': {hp:[200,270], atk:[50,85]},
+        'L': {hp:[240,320], atk:[70,110]}
     };
     var b = ranges[r] || ranges['C'];
     var pHP = Math.max(0, Math.min(1, (hp - b.hp[0]) / (b.hp[1] - b.hp[0])));
     var pATK = Math.max(0, Math.min(1, (atk - b.atk[0]) / (b.atk[1] - b.atk[0])));
-    var pDEF = Math.max(0, Math.min(1, (def - b.def[0]) / (b.def[1] - b.def[0])));
-    var avg = (pHP + pATK + pDEF) / 3;
+    var avg = (pHP + pATK) / 2;
     return Math.floor(avg * 9) + 1;
 }
 
@@ -28,8 +28,7 @@ function cardHTML(c, inst){
   
   var hp = inst ? inst.hp : (c.hp !== undefined ? c.hp : '???');
   var atk = inst ? inst.attack : (c.attack !== undefined ? c.attack : '???');
-  var def = inst ? inst.defense : (c.defense !== undefined ? c.defense : '???');
-  var note = (hp !== '???') ? calculateNote(c.r, hp, atk, def) : '?';
+  var note = (hp !== '???') ? calculateNote(c.r, hp, atk) : '?';
   var skills = inst && inst.skills ? inst.skills : [];
   
   var skillHtml = skills.map(function(s, i) {
@@ -62,7 +61,6 @@ function cardHTML(c, inst){
     '</div>'+
     '<div class="card-stats">'+
         '<div class="stat-box stat-atk"><span style="font-size:3cqw;opacity:0.8">⚔️</span> <span>ATQ<br><span class="stat-val">'+atk+'</span></span></div>'+
-        '<div class="stat-box stat-def"><span style="font-size:3cqw;opacity:0.8">🛡️</span> <span>DEF<br><span class="stat-val">'+def+'</span></span></div>'+
         '<div class="stat-box stat-hp"><span style="font-size:3cqw;opacity:0.8">❤️</span> <span>PV<br><span class="stat-val">'+hp+'</span></span></div>'+
     '</div>'+
     '<div class="card-bottom">'+

@@ -28,7 +28,7 @@ function btGame(body) {
 }
 
 /* ---------- menu ---------- */
-function btCompleteDecks() { return (typeof myDecks !== 'undefined' ? myDecks : []).filter(function(d){ return d.cards.length === DECK_SIZE; }); }
+function btCompleteDecks() { return (typeof myDecks !== 'undefined' ? myDecks : []).filter(function(d){ return d.cards.length === DECK_SIZE && !(typeof deckOverLimit === 'function' && deckOverLimit(d)); }); }
 
 async function btRefreshMenu() {
   var sel = $('bt-deck'); if (!sel) return;
@@ -39,7 +39,13 @@ async function btRefreshMenu() {
   if (keep && decks.some(function(d){ return d.id === keep; })) sel.value = keep;
   var st = $('bt-start'); if (st) st.disabled = !decks.length;
   var info = $('bt-resume');
-  if (info) { if (!decks.length) { info.hidden = false; info.innerHTML = 'Crée un deck de ' + DECK_SIZE + ' cartes dans l\'onglet <b>Decks</b> pour jouer.'; } else if (!BT.active) info.hidden = true; }
+  var overN = (typeof myDecks !== 'undefined' ? myDecks : []).filter(function(d){ return d.cards.length === DECK_SIZE && typeof deckOverLimit === 'function' && deckOverLimit(d); }).length;
+  if (info) {
+    if (!decks.length) { info.hidden = false; info.innerHTML = overN
+      ? 'Tes decks complets ont trop de cartes rares (max ' + DECK_RAR_LIMITS.L + ' Légendaire, ' + DECK_RAR_LIMITS.E + ' Épiques, ' + DECK_RAR_LIMITS.R + ' Rares). Modifie-les dans l\'onglet <b>Decks</b>.'
+      : 'Crée un deck de ' + DECK_SIZE + ' cartes dans l\'onglet <b>Decks</b> pour jouer.'; }
+    else if (!BT.active) info.hidden = true;
+  }
   var r = await btCall({ action: 'resume' });
   BT.active = (r && r.ok && r.match_id) ? r : null;
   if (info && BT.active) {
@@ -90,7 +96,9 @@ function btApply(v, enter) {
 function btSkill(id) { return (BT.v && BT.v.skills && BT.v.skills[id]) || { name: '?', description: '', rarity: 'C', cost: 0 }; }
 function btRarCls(c) { return RAR[ri(c ? c.r : 'C')].cls; }
 
-/* ---------- rendu d'une carte : cadre par rareté, nom, image, ATQ / DEF / PV, skill (version détaillée = o.big) ---------- */
+/* ---------- rendu d'une carte : cadre par rareté, nom, image, ATQ / PV, skill (version détaillée = o.big) ---------- */
+var BT_SWORD = '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M15.5 2.5 L17.5 2.5 L17.5 4.5 L8.5 13.5 L6.5 11.5Z" fill="#fff"/><path d="M4.2 10.8 L9.2 15.8 L8 17 L6.4 15.4 L4 17.8 L2.2 16 L4.6 13.6 L3 12Z" fill="#ffd7a0"/></svg>';
+var BT_HEARTI = '<svg viewBox="0 0 20 18" aria-hidden="true"><path d="M10 17 C2 11 .5 7 1.5 4.5 C3 1 7.5 1 10 4.5 C12.5 1 17 1 18.5 4.5 C19.5 7 18 11 10 17Z" fill="#fff"/></svg>';
 var BT_GEMSVG = '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 1 L18 8 L10 19 L2 8Z" fill="currentColor" stroke="#fff" stroke-opacity=".7" stroke-width="1"/><path d="M2 8H18M10 1 7 8 10 19 13 8Z" fill="none" stroke="#fff" stroke-opacity=".45"/></svg>';
 function btUnitHTML(u, o) {
   o = o || {};
@@ -106,9 +114,8 @@ function btUnitHTML(u, o) {
       '<span class="bt-stars s' + u.stars + '">' + stars + '</span><span class="bt-sts"></span>' +
       '<span class="bt-hpbar"><i style="width:100%"></i><em class="bt-shield" style="width:0"></em></span></span>' +
     '<div class="bt-ustats">' +
-      '<b class="bt-chip atk"><span class="bt-a">' + u.atk + '</span></b>' +
-      '<b class="bt-chip def"><span class="bt-d">' + u.def + '</span></b>' +
-      '<b class="bt-chip hp"><span class="bt-h">' + u.hp + '</span></b></div>' +
+      '<b class="bt-chip atk" title="Attaque">' + BT_SWORD + '<span class="bt-a">' + u.atk + '</span></b>' +
+      '<b class="bt-chip hp" title="Points de vie">' + BT_HEARTI + '<span class="bt-h">' + u.hp + '</span></b></div>' +
     '<div class="bt-uskill"><span class="bt-skn"><span class="bt-skgem sk-' + skr + '"></span><span>' + esc(sk.name) + '</span></span><span class="bt-skd">' + esc(sk.description || '') + '</span></div>' +
   '</div></div>';
 }
@@ -116,7 +123,7 @@ function btUnitHTML(u, o) {
 /* carte tirée : posée dans un emplacement de tirage (image fournie), pastille de coût */
 function btOffCardHTML(o, energy) {
   if (!o) return '<div class="bt-off bt-off-empty">—</div>';
-  var u = { card_id: o.card_id, stars: 1, hp: o.hp, atk: o.atk, def: o.def, skill_id: o.skill_id };
+  var u = { card_id: o.card_id, stars: 1, hp: o.hp, atk: o.atk, skill_id: o.skill_id };
   var can = o.cost != null && o.cost <= energy, sel = BT.sel && BT.sel.t === 'offer' && BT.sel.i === o.i;
   return '<button type="button" class="bt-off' + (can ? '' : ' bt-off-no') + (sel ? ' sel' : '') + '" data-off="' + o.i + '">' +
     btUnitHTML(u, { big: true, cost: o.cost }) + '<span class="bt-cost">' + (o.cost == null ? '🚫' : o.cost) + '</span></button>';
@@ -180,11 +187,13 @@ function btInfoHTML(v) {
   if (s && s.t === 'offer') {
     var o = v.me.offer[s.i]; if (!o) return '';
     var sk = btSkill(o.skill_id), c = cardById(o.card_id);
-    return '<b>' + esc(c ? c.t : '?') + '</b> — ' + esc(sk.name) + ' <span class="muted">(' + esc(BT_TRIG[sk.trigger] || '') + ')</span><br><span class="muted">' + esc(sk.description) + '</span><br><em>Choisis un emplacement (' + (o.cost == null ? 'injouable' : o.cost + ' ⚡') + ').</em>';
+    return '<span class="bt-skt"><b class="sk-' + RAR[ri(String(sk.rarity || 'C').toUpperCase())].cls + '">' + esc(sk.name) + '</b> <span class="muted">· ' + esc(BT_TRIG[sk.trigger] || '') + '</span></span>' +
+      '<span class="bt-skdesc">' + esc(sk.description) + '</span>' +
+      '<em>' + (o.cost == null ? 'Injouable avec ce héros.' : 'Touche un emplacement pour la poser (' + o.cost + ' ⚡).') + '</em>';
   }
   if (s && s.t === 'board') return '<span class="muted">Touche un autre emplacement pour déplacer ou échanger.</span>';
   var playable = v.me.offer.some(function(o){ return o && o.cost != null && o.cost <= v.me.energy; });
-  return playable ? '<span class="muted">Touche une carte puis un emplacement pour la poser.</span>'
+  return playable ? '<span class="muted">Touche une carte pour lire son skill, puis un emplacement pour la poser.</span>'
     : '<span class="muted">Rien de jouable (⚡ ' + v.me.energy + ') : relance, monte une carte d\'étoile ou passe. +1 ⚡ par manche.</span>';
 }
 
@@ -195,7 +204,7 @@ function btInfoBigHTML(v) {
   var up = u.up_cost == null ? '<span class="muted">Étoiles au maximum</span>'
     : '<button type="button" class="bt-btn" id="bt-up"' + (v.me.energy < u.up_cost ? ' disabled' : '') + '>Monter ★ (' + u.up_cost + ' ⚡)</button>';
   return '<div class="bt-infobig"><button type="button" class="bt-close" data-close title="Fermer">✕</button>' +
-    '<span><b>' + esc(c ? c.t : '?') + '</b> ' + '★'.repeat(u.stars) + ' · ATQ ' + u.atk + ' · DEF ' + u.def + ' · PV ' + u.hp + '</span>' +
+    '<span><b>' + esc(c ? c.t : '?') + '</b> ' + '★'.repeat(u.stars) + ' · ATQ ' + u.atk + ' · PV ' + u.hp + '</span>' +
     '<span><b>' + esc(sk.name) + '</b> <span class="muted">(' + esc(BT_TRIG[sk.trigger] || '') + ', +' + boost + ' % skill)</span></span>' +
     '<span class="muted">' + esc(sk.description) + '</span>' + up + '</div>';
 }
@@ -209,7 +218,7 @@ function btDrawHTML(v, enter) {
     '<div class="bt-dtop"><span class="bt-en" title="Énergie"><i>⚡</i><b>' + v.me.energy + '</b><small>/ ' + v.me.max_energy + '</small></span>' +
       '<button type="button" class="bt-btn" id="bt-reroll">Relancer (' + v.me.reroll_cost + ' ⚡)</button></div>' +
     '<div class="bt-dmid">' + mid + '</div>' +
-    '<div class="bt-dbot"><div class="bt-info" id="bt-info">' + btInfoHTML(v) + '</div>' +
+    '<div class="bt-dbot"><div class="bt-info' + (BT.sel && BT.sel.t === 'offer' ? ' sk' : '') + '" id="bt-info">' + btInfoHTML(v) + '</div>' +
       '<button type="button" class="bt-btn go" id="bt-ready">Prêt ▶</button></div></div>';
 }
 
@@ -351,7 +360,8 @@ async function btReplay(v, reward) {
     cellsBot.push('<div class="bt-cell ghost' + (b ? ' full' : '') + '">' + (b ? btUnitHTML(b, { uid: 'bot.' + s }) : '<span class="bt-empty">' + BT_ART.swords() + '</span>') + '</div>');
   });
   BT.v = Object.assign({}, v, { skills: Object.assign({}, pv && pv.skills, v.skills) });
-  var rd = last.round;
+  var rd = last.round; BT.replayRound = rd;
+  if (BT.pvp && typeof dlReplayWatch === 'function') dlReplayWatch(rd);   // duel : vitesse et « Passer » partagés
   g.innerHTML =
     '<div class="bt-bar"><span class="bt-round">Combat — manche <b>' + rd + '</b></span>' +
       '<span class="bt-speed"><button type="button" class="btn sm" id="bt-spd">×' + BT.speed + '</button> <button type="button" class="btn sm" id="bt-skip">Passer ⏭</button></span></div>' +
@@ -393,6 +403,7 @@ async function btReplay(v, reward) {
     if (bar) bar.style.width = Math.max(0, Math.min(100, hero.hp / hero.max_hp * 100)) + '%';
   });
   await btSleep(BT.skip ? 700 : 1700);
+  if (typeof dlReplayStop === 'function') dlReplayStop();
   BT.replaying = false; BT.sel = null;
   if (v.status === 'over') { BT.v = v; BT.reward = reward; btRenderOver(); return; }
   btApply(v, true);
@@ -421,8 +432,8 @@ document.addEventListener('click', function(e) {
     btRefreshMenu(); return;
   }
   if (!$('bt-game') || $('bt-game').hidden) return;
-  if (t.closest('#bt-spd')) { BT.speed = BT.speed === 1 ? 2 : BT.speed === 2 ? 4 : 1; $('bt-spd').textContent = '×' + BT.speed; return; }
-  if (t.closest('#bt-skip')) { BT.skip = true; return; }
+  if (t.closest('#bt-spd')) { BT.speed = BT.speed === 1 ? 2 : BT.speed === 2 ? 4 : 1; $('bt-spd').textContent = '×' + BT.speed; if (BT.pvp && typeof dlReplaySend === 'function') dlReplaySend({ speed: BT.speed }); return; }
+  if (t.closest('#bt-skip')) { BT.skip = true; if (BT.pvp && typeof dlReplaySend === 'function') dlReplaySend({ skip: true }); return; }
   if (BT.replaying) return;
   if (t.closest('#bt-quit')) {
     if (!confirm('Abandonner la partie en cours ? Aucune récompense ne sera donnée.')) return;

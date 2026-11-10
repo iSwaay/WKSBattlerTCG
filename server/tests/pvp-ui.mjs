@@ -12,7 +12,7 @@ const SK = [
  { id:6, rarity:'L', name:'Exécution', category:'attack', description:'Achève sous 30 % PV.', energy_cost:4, trigger:'every_n_attacks', trigger_n:2, target:'target', damage_atk_pct:100, extra:{execute_below_pct:30} },
  { id:7, rarity:'C', name:'Fureur', category:'attack', description:'+20 % ATQ.', energy_cost:0, trigger:'passive', target:'self', atk_mod_pct:20 },
 ].map(normSkill);
-const mk = (n) => Array.from({ length: 20 }, (_, i) => ({ card_id: 'c' + (i % 8), instance_id: n + i, hp: 120 + i * 8, atk: 20 + (i % 7) * 5, def: 8 + (i % 5) * 3, skill: SK[(i + n.length) % SK.length] }));
+const mk = (n) => Array.from({ length: 20 }, (_, i) => ({ card_id: 'c' + (i % 8), instance_id: n + i, hp: 120 + i * 8, atk: 20 + (i % 7) * 5, def: 0, rarity: ['C','R','E','L'][i % 4], skill: SK[(i + n.length) % SK.length] }));
 const heroRows = [
  { id:'pionnier', name:'Le Pionnier', archetype:'', base_hp:100, hp_lvl10:100, energy_cap:10, field_slots:5, effects:{}, price:0, image:'', active:true },
  { id:'egide', name:"L'Égide", archetype:'', base_hp:115, hp_lvl10:115, energy_cap:10, field_slots:4, effects:{ blocked_slots:['R2'], shield_efficiency_pct:25 }, price:0, image:'', active:true } ];
@@ -33,6 +33,7 @@ const server = (user, body) => {
   if (body.action === 'invites') return { ok: true, now, invites: Object.values(duels).filter((d) => d.invited === user && d.status === 'waiting').map((d) => ({ duel_id: d.id, from: 'Alice' })) };
   if (body.action === 'decline' || body.action === 'cancel') { const d = duels[body.duel_id]; if (d) d.status = 'cancelled'; return { ok: true, now }; }
   if (body.action === 'resume') { const d = rows(user).find((x) => x.status === 'waiting' || x.status === 'prep'); return { ok: true, now, duel: d ? (d.status === 'waiting' ? { id: d.id, status: 'waiting', code: d.code, invited: !!d.invited } : { id: d.id, status: 'prep' }) : null }; }
+  if (body.action === 'replay_set' || body.action === 'replay_get') { const d0 = duels[body.duel_id]; d0.replay = d0.replay || {}; if (body.action === 'replay_set') { if (body.speed) d0.replay.speed = body.speed; if (body.skip) d0.replay.skip_round = body.round; } return { ok: true, now, replay: d0.replay }; }
   const d = duels[body.duel_id]; if (!d) return { error: 'Duel introuvable.' };
   const vw = d.host === user ? 'me' : 'bot';
   if (d.status === 'waiting') return { ok: true, now, status: 'waiting', code: d.code };
@@ -103,6 +104,7 @@ await A.screenshot({ path: '/tmp/bt/pvp-wait-A.png' }); await B.screenshot({ pat
 await B.click('#bt-ready');
 await B.waitForSelector('#bt-skip', { timeout: 5000 }); await A.waitForSelector('#bt-skip', { timeout: 8000 });
 await A.waitForTimeout(800); await A.screenshot({ path: '/tmp/bt/pvp-combat-A.png' }); await B.screenshot({ path: '/tmp/bt/pvp-combat-B.png' });
+await A.click('#bt-spd'); await A.click('#bt-spd'); await B.waitForFunction(() => document.querySelector('#bt-spd') && document.querySelector('#bt-spd').textContent === '×4', null, { timeout: 4000 }).then(() => console.log('vitesse ×4 de A appliquée chez B : OK')).catch(() => console.log('vitesse NON synchronisée'));
 const bannerSeen = {};
 for (const [n, p] of [['A', A], ['B', B]]) { await p.click('#bt-skip'); await p.waitForSelector('#bt-banner:not([hidden])'); bannerSeen[n] = await p.textContent('#bt-banner b'); }
 console.log('bannières (une gagnée/une perdue, ou égalité):', bannerSeen);

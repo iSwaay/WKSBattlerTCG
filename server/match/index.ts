@@ -17,9 +17,16 @@ async function skillMap() {
 }
 const toCard = (inst, sk) => {
   const link = one(inst.card_instance_skills); const skill = link && sk[link.skill_id];
-  return skill ? { card_id: inst.card_id, instance_id: inst.instance_id, hp: inst.hp, atk: inst.attack, def: inst.defense, skill } : null;
+  const card = one(inst.cards);
+  return skill ? { card_id: inst.card_id, instance_id: inst.instance_id, rarity: (card && card.rarity) || 'C', hp: inst.hp, atk: inst.attack, def: 0, skill } : null;
 };
-const INST_SEL = 'instance_id, card_id, hp, attack, defense, card_instance_skills(skill_id)';
+const INST_SEL = 'instance_id, card_id, hp, attack, defense, cards(rarity), card_instance_skills(skill_id)';
+const RAR_NAME = { L: 'Légendaire', E: 'Épique', R: 'Rare', C: 'Commune' };
+async function rarityLimits() { return (await admin.from('game_config').select('value').eq('key', 'deck_rarity_limits').maybeSingle()).data?.value || {}; }
+function overLimits(cards, lim) {
+  const n = {}; cards.forEach((c) => { n[c.rarity] = (n[c.rarity] || 0) + 1; });
+  return Object.keys(lim).filter((r) => (n[r] || 0) > lim[r]).map((r) => n[r] + ' ' + RAR_NAME[r] + (n[r] > 1 ? 's' : '') + ' (max ' + lim[r] + ')');
+}
 
 async function playerSide(uid, deckId, cfg, sk) {
   const { data: deck } = await admin.from('decks').select('id').eq('id', deckId).eq('user_id', uid).maybeSingle();
@@ -30,6 +37,8 @@ async function playerSide(uid, deckId, cfg, sk) {
   const { data: insts } = await admin.from('card_instances').select(INST_SEL).in('instance_id', ids).eq('user_id', uid);
   const cards = (insts || []).map((i) => toCard(i, sk)).filter(Boolean);
   if (cards.length !== 20) return { error: 'Deck invalide : une carte a changé de propriétaire ou n\'a pas de skill.' };
+  const bad = overLimits(cards, await rarityLimits());
+  if (bad.length) return { error: 'Ce deck dépasse la limite de raretés : ' + bad.join(', ') + '. Modifie-le dans l\'onglet Decks.' };
   const { data: prof } = await admin.from('profiles').select('active_hero').eq('id', uid).maybeSingle();
   const heroId = (prof && prof.active_hero) || 'pionnier';
   const [{ data: hrow }, { data: uh }] = await Promise.all([admin.from('heroes').select('*').eq('id', heroId).maybeSingle(), admin.from('user_heroes').select('level').eq('user_id', uid).eq('hero_id', heroId).maybeSingle()]);
@@ -50,9 +59,13 @@ async function botSide(diff, cfg, sk) {
   const n = pool.length, w = Math.max(20, Math.floor(n * 0.5));
   const start = diff === 'easy' ? 0 : diff === 'hard' ? n - w : Math.floor((n - w) / 2);
   const band = pool.slice(Math.max(0, start), Math.max(0, start) + w);
+  // le bot respecte les mêmes limites de raretés que les joueurs
+  const lim = await rarityLimits(), cnt = {};
+  const fits = (c) => lim[c.rarity] == null || (cnt[c.rarity] || 0) < lim[c.rarity];
+  const take = (c) => { cnt[c.rarity] = (cnt[c.rarity] || 0) + 1; deck.push(c); };
   const seen = new Set(), deck = [];
-  for (const c of band.sort(() => Math.random() - 0.5)) { const k = c.card_id + '|' + c.skill.id; if (!seen.has(k)) { seen.add(k); deck.push(c); if (deck.length === 20) break; } }
-  for (const c of pool) { if (deck.length >= 20) break; if (!deck.includes(c)) deck.push(c); }
+  for (const c of band.sort(() => Math.random() - 0.5)) { const k = c.card_id + '|' + c.skill.id; if (!seen.has(k) && fits(c)) { seen.add(k); take(c); if (deck.length === 20) break; } }
+  for (const c of pool) { if (deck.length >= 20) break; if (!deck.includes(c) && fits(c)) take(c); }
   if (deck.length < 20) return { error: 'Pas assez de cartes pour générer un adversaire.' };
   return { hero: makeHero(hrow, lv), deck };
 }

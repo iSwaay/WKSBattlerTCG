@@ -2,14 +2,30 @@
 /* Decks : liste, création / édition (20 cartes), suppression */
 
 var DECK_SIZE = 20, MAX_DECKS = 10;
+var DECK_RAR_LIMITS = { L: 1, E: 3, R: 8 };   // cartes max par rareté dans un deck (game_config.deck_rarity_limits)
+var DK_RAR_NAME = { L: 'Légendaire', E: 'Épique', R: 'Rare', C: 'Commune' };
 var myDecks = [];
 var dk = { id: null, name: '', ids: [] };
 var dkSort = 'rar_desc', dkQuery = '', dkRar = 'ALL', dkShown = 60;
 var DK_SORTS = [
   ['rar_desc','Rareté ↓'], ['rar_asc','Rareté ↑'], ['skill_desc','Rareté du skill ↓'],
-  ['note_desc','Note ↓'], ['atk_desc','Attaque ↓'], ['def_desc','Défense ↓'], ['hp_desc','PV ↓'],
+  ['note_desc','Note ↓'], ['atk_desc','Attaque ↓'], ['hp_desc','PV ↓'],
   ['name_asc','Nom A → Z']
 ];
+
+/* ---------- limites de raretés ---------- */
+function dkRarCount(ids, im) {
+  im = im || instMap(); var rc = { C: 0, R: 0, E: 0, L: 0 };
+  ids.forEach(function(id){ var i = im[id], c = i && cardById(i.card_id); if (c) rc[c.r] = (rc[c.r] || 0) + 1; });
+  return rc;
+}
+/* raretés en dépassement, ex. ["2 Légendaires (max 1)"] */
+function dkOverLimits(ids, im) {
+  var rc = dkRarCount(ids, im), out = [];
+  Object.keys(DECK_RAR_LIMITS).forEach(function(r){ if (rc[r] > DECK_RAR_LIMITS[r]) out.push(rc[r] + ' ' + DK_RAR_NAME[r] + (rc[r] > 1 ? 's' : '') + ' (max ' + DECK_RAR_LIMITS[r] + ')'); });
+  return out;
+}
+function deckOverLimit(d) { return dkOverLimits(d.cards || []).length > 0; }
 
 /* ---------- données ---------- */
 function instMap() {
@@ -21,12 +37,13 @@ function instMap() {
 async function loadDecks() {
   var res = await Promise.all([
     sb.from('decks').select('id, name, updated_at, deck_cards(instance_id, position)').eq('user_id', U.id).order('updated_at', { ascending: false }),
-    sb.from('game_config').select('key, value').in('key', ['deck_size', 'max_decks_per_user'])
+    sb.from('game_config').select('key, value').in('key', ['deck_size', 'max_decks_per_user', 'deck_rarity_limits'])
   ]);
   if (res[0].error) throw res[0].error;
   (res[1].data || []).forEach(function(r){
     if (r.key === 'deck_size') DECK_SIZE = parseInt(r.value, 10) || 20;
     if (r.key === 'max_decks_per_user') MAX_DECKS = parseInt(r.value, 10) || 10;
+    if (r.key === 'deck_rarity_limits' && r.value && typeof r.value === 'object') DECK_RAR_LIMITS = r.value;
   });
   myDecks = (res[0].data || []).map(function(d){
     d.cards = (d.deck_cards || []).slice().sort(function(a, b){ return a.position - b.position; })
@@ -49,12 +66,12 @@ function dkTile(inst, extraCls, attrs) {
   var has = c.img && /^http|data:image\//.test(c.img);
   var m = c.t.match(/[A-Za-zÀ-ÿ0-9]/), ini = m ? m[0].toUpperCase() : '?';
   var sk = inst.skills && inst.skills[0];
-  var note = calculateNote(c.r, inst.hp, inst.attack, inst.defense);
+  var note = calculateNote(c.r, inst.hp, inst.attack);
   return '<button type="button" class="dk-tile dk-r-' + R.cls + (extraCls ? ' ' + extraCls : '') + '" ' + (attrs || '') + ' title="' + esc(c.t) + '">' +
     '<span class="dk-img">' + (has ? '<img src="' + esc(c.img) + '" alt="" loading="lazy" draggable="false">' : '<b>' + esc(ini) + '</b>') + '</span>' +
     '<span class="dk-note">' + note + '</span>' +
     '<span class="dk-name">' + esc(c.t) + '</span>' +
-    '<span class="dk-stats"><i>⚔ ' + inst.attack + '</i><i>🛡 ' + inst.defense + '</i><i>❤ ' + inst.hp + '</i></span>' +
+    '<span class="dk-stats"><i>⚔ ' + inst.attack + '</i><i>❤ ' + inst.hp + '</i></span>' +
     (sk ? '<span class="dk-skill dk-sk-' + dkSkillRarCls(inst) + '">' + esc(sk.name) + '</span>' : '<span class="dk-skill">—</span>') +
   '</button>';
 }
@@ -72,19 +89,21 @@ function renderDecks() {
   }
   box.innerHTML = myDecks.map(function(d){
     var owned = d.cards.filter(function(id){ return im[id]; });
-    var complete = owned.length === DECK_SIZE;
-    var rc = { C: 0, R: 0, E: 0, L: 0 };
-    owned.forEach(function(id){ var c = cardById(im[id].card_id); if (c) rc[c.r] = (rc[c.r] || 0) + 1; });
+    var over = dkOverLimits(owned, im).length > 0;
+    var complete = owned.length === DECK_SIZE && !over;
+    var rc = dkRarCount(owned, im);
+    var lim = function(r){ return DECK_RAR_LIMITS[r] != null ? '/' + DECK_RAR_LIMITS[r] : ''; };
+    var ovc = function(r){ return DECK_RAR_LIMITS[r] != null && rc[r] > DECK_RAR_LIMITS[r] ? ' over' : ''; };
     var thumbs = owned.slice(0, 6).map(function(id){
       var c = cardById(im[id].card_id), has = c && c.img && /^http|data:image\//.test(c.img);
       return '<span class="dkc-th dk-r-' + (c ? RAR[ri(c.r)].cls : 'c') + '">' + (has ? '<img src="' + esc(c.img) + '" alt="" loading="lazy">' : '') + '</span>';
     }).join('');
     return '<div class="dkc panel' + (complete ? ' ok' : '') + '" data-deck="' + esc(d.id) + '">' +
       '<div class="dkc-top"><b class="dkc-name">' + esc(d.name) + '</b>' +
-        '<span class="dkc-badge ' + (complete ? 'ok' : 'warn') + '">' + (complete ? '✓ Prêt' : 'Incomplet') + ' · ' + owned.length + '/' + DECK_SIZE + '</span></div>' +
+        '<span class="dkc-badge ' + (complete ? 'ok' : 'warn') + '">' + (complete ? '✓ Prêt' : over ? 'Trop de cartes rares' : 'Incomplet') + ' · ' + owned.length + '/' + DECK_SIZE + '</span></div>' +
       '<div class="dkc-thumbs">' + thumbs + '</div>' +
       '<div class="dkc-rar">' +
-        '<span class="dk-r-c">C ' + rc.C + '</span><span class="dk-r-r">R ' + rc.R + '</span><span class="dk-r-e">E ' + rc.E + '</span><span class="dk-r-l">L ' + rc.L + '</span></div>' +
+        '<span class="dk-r-c">C ' + rc.C + '</span><span class="dk-r-r' + ovc('R') + '">R ' + rc.R + lim('R') + '</span><span class="dk-r-e' + ovc('E') + '">E ' + rc.E + lim('E') + '</span><span class="dk-r-l' + ovc('L') + '">L ' + rc.L + lim('L') + '</span></div>' +
       '<div class="dkc-act"><button type="button" class="btn sm primary dk-edit" data-deck="' + esc(d.id) + '">Modifier</button>' +
         '<button type="button" class="btn sm danger dk-del" data-deck="' + esc(d.id) + '">Supprimer</button></div>' +
     '</div>';
@@ -110,6 +129,7 @@ function dkOpen(deckId) {
         '<button type="button" class="btn sm" id="dk-cancel">Fermer</button>' +
       '</div>' +
       '<div class="dke-slots" id="dk-slots"></div>' +
+      '<div class="dke-lims" id="dk-lims"></div>' +
       '<div class="dke-curve" id="dk-curve"></div>' +
       '<div class="dke-tools">' +
         '<input type="text" id="dk-search" class="search-input" placeholder="Rechercher (carte, skill)…" autocomplete="off">' +
@@ -157,6 +177,14 @@ function dkRenderSlots() {
     cv.innerHTML = tot ? '⚡ Coût des cartes : <b>0-1</b> × ' + b[0] + ' · <b>2</b> × ' + b[1] + ' · <b>3</b> × ' + b[2] + ' · <b>4+</b> × ' + b[3] +
       (b[0] < 4 ? ' <span class="dke-warn">Peu de cartes à 0-1 ⚡ : tu risques de ne rien pouvoir jouer aux premières manches (tu démarres avec 1 ⚡).</span>' : '') : '';
   }
+  var lb = $('dk-lims');
+  if (lb) {
+    var rc = dkRarCount(dk.ids, im);
+    lb.innerHTML = 'Raretés max : ' + ['L', 'E', 'R'].filter(function(r){ return DECK_RAR_LIMITS[r] != null; }).map(function(r){
+      var o = rc[r] > DECK_RAR_LIMITS[r], f = rc[r] === DECK_RAR_LIMITS[r];
+      return '<span class="dk-lim dk-r-' + RAR[ri(r)].cls + (o ? ' over' : f ? ' full' : '') + '">' + DK_RAR_NAME[r] + ' ' + rc[r] + '/' + DECK_RAR_LIMITS[r] + '</span>';
+    }).join('') + (dkOverLimits(dk.ids, im).length ? ' <span class="dke-warn">Retire des cartes en trop pour pouvoir enregistrer.</span>' : '');
+  }
   if (c) { c.textContent = n + ' / ' + DECK_SIZE; c.className = 'dke-count' + (n === DECK_SIZE ? ' ok' : ''); }
   var s = $('dk-save'); if (s) s.textContent = n === DECK_SIZE ? 'Enregistrer le deck' : 'Enregistrer (brouillon ' + n + '/' + DECK_SIZE + ')';
 }
@@ -168,7 +196,7 @@ function dkFiltered() {
     if (dkRar !== 'ALL' && c.r !== dkRar) return;
     var sk = inst.skills && inst.skills[0];
     if (q && c.t.toLowerCase().indexOf(q) === -1 && !(sk && sk.name.toLowerCase().indexOf(q) !== -1) && String(c.cat || '').toLowerCase().indexOf(q) === -1) return;
-    list.push({ inst: inst, c: c, note: calculateNote(c.r, inst.hp, inst.attack, inst.defense),
+    list.push({ inst: inst, c: c, note: calculateNote(c.r, inst.hp, inst.attack),
                 skr: sk ? ri(String(sk.rarity || '').trim().toUpperCase()) : -1 });
   });
   var key = dkSort.split('_')[0], dir = dkSort.split('_')[1] === 'asc' ? 1 : -1;
@@ -178,7 +206,6 @@ function dkFiltered() {
     else if (key === 'skill') { va = a.skr; vb = b.skr; }
     else if (key === 'note') { va = a.note; vb = b.note; }
     else if (key === 'atk') { va = a.inst.attack; vb = b.inst.attack; }
-    else if (key === 'def') { va = a.inst.defense; vb = b.inst.defense; }
     else if (key === 'hp') { va = a.inst.hp; vb = b.inst.hp; }
     else return a.c.t.localeCompare(b.c.t, 'fr') * dir;
     if (va !== vb) return (va - vb) * dir;
@@ -192,11 +219,12 @@ function dkRenderGrid() {
   var grid = $('dk-grid'); if (!grid) return;
   var im = instMap(), list = dkFiltered();
   if (!list.length) { grid.innerHTML = '<div class="empty-col">' + ((window.myInstances || []).length ? 'Aucune carte ne correspond.' : 'Ta collection est vide : ouvre des packs !') + '</div>'; return; }
-  var full = dk.ids.length >= DECK_SIZE;
+  var full = dk.ids.length >= DECK_SIZE, rc = dkRarCount(dk.ids, im);
   var html = list.slice(0, dkShown).map(function(o){
     var st = dkConflict(o.inst, im);
-    var cls = st === 'in' ? 'dk-in' : (st === 'dup' ? 'dk-dup' : (full ? 'dk-full' : ''));
-    var tag = st === 'in' ? '<span class="dk-flag">Dans le deck</span>' : (st === 'dup' ? '<span class="dk-flag warn">Même skill</span>' : '');
+    var capped = !st && DECK_RAR_LIMITS[o.c.r] != null && rc[o.c.r] >= DECK_RAR_LIMITS[o.c.r];
+    var cls = st === 'in' ? 'dk-in' : (st === 'dup' ? 'dk-dup' : ((full || capped) ? 'dk-full' : ''));
+    var tag = st === 'in' ? '<span class="dk-flag">Dans le deck</span>' : (st === 'dup' ? '<span class="dk-flag warn">Même skill</span>' : (capped ? '<span class="dk-flag warn">Limite ' + DK_RAR_NAME[o.c.r] + '</span>' : ''));
     return '<div class="dk-cell">' + dkTile(o.inst, cls, 'data-add="' + o.inst.instance_id + '"') + tag + '</div>';
   }).join('');
   if (list.length > dkShown) html += '<button type="button" class="btn dk-more" id="dk-more">Afficher plus (' + (list.length - dkShown) + ' restantes)</button>';
@@ -207,6 +235,8 @@ function dkRenderGrid() {
 async function dkSave(btn) {
   var name = ($('dk-name').value || '').trim();
   if (!name) { toast('Donne un nom à ton deck.'); return; }
+  var ov = dkOverLimits(dk.ids);
+  if (ov.length) { toast('Trop de cartes rares : ' + ov.join(', ') + '.'); return; }
   btn.disabled = true;
   var r = await sb.rpc('save_deck', { p_deck_id: dk.id, p_name: name, p_instance_ids: dk.ids });
   btn.disabled = false;
@@ -241,6 +271,8 @@ document.addEventListener('click', function(e) {
     var st = dkConflict(inst, im);
     if (st === 'in') return;
     if (st === 'dup') { toast('Tu as déjà cette carte avec ce skill dans le deck.'); return; }
+    var cc = cardById(inst.card_id), lmt = cc && DECK_RAR_LIMITS[cc.r];
+    if (lmt != null && dkRarCount(dk.ids, im)[cc.r] >= lmt) { toast('Limite atteinte : ' + lmt + ' ' + DK_RAR_NAME[cc.r] + (lmt > 1 ? 's' : '') + ' maximum par deck.'); return; }
     dk.ids.push(id); dkRenderAll(); return;
   }
   if (t.closest('#dk-more')) { dkShown += 60; dkRenderGrid(); return; }

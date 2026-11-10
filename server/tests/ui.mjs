@@ -12,7 +12,7 @@ const SK = [
  { id:6, rarity:'L', name:'Exécution', category:'attack', description:'Achève sous 30 % PV.', energy_cost:4, trigger:'every_n_attacks', trigger_n:2, target:'target', damage_atk_pct:100, extra:{execute_below_pct:30} },
  { id:7, rarity:'C', name:'Fureur', category:'attack', description:'+20 % ATQ.', energy_cost:0, trigger:'passive', target:'self', atk_mod_pct:20 },
 ].map(normSkill);
-const mk = (n) => Array.from({ length: 20 }, (_, i) => ({ card_id: 'c' + (i % 8), instance_id: n + i, hp: 120 + i * 8, atk: 20 + (i % 7) * 5, def: 8 + (i % 5) * 3, skill: SK[(i + n.length) % SK.length] }));
+const mk = (n) => Array.from({ length: 20 }, (_, i) => ({ card_id: 'c' + (i % 8), instance_id: n + i, hp: 120 + i * 8, atk: 20 + (i % 7) * 5, def: 0, rarity: ['C','R','E','L'][i % 4], skill: SK[(i + n.length) % SK.length] }));
 const heroRows = [
  { id:'pionnier', name:'Le Pionnier', archetype:'', base_hp:100, hp_lvl10:100, energy_cap:10, field_slots:5, effects:{}, price:0, image:'', active:true },
  { id:'egide', name:"L'Égide", archetype:'', base_hp:115, hp_lvl10:115, energy_cap:10, field_slots:4, effects:{ blocked_slots:['R2'], shield_efficiency_pct:25 }, price:0, image:'', active:true } ];
@@ -68,6 +68,7 @@ for (const [name, w, h] of [['desktop', 1280, 900], ['mobile', 390, 900]]) {
   await page.screenshot({ path: `/tmp/bt/${name}-menu.png` });
   await page.click('#bt-start'); await page.waitForSelector('.bt-offers .bt-off');
   await page.waitForTimeout(1000); await page.screenshot({ path: `/tmp/bt/${name}-prep1.png` });
+  { const o = await page.$('.bt-off'); await o.click(); await page.waitForTimeout(150); await page.screenshot({ path: `/tmp/bt/${name}-offsel.png` }); await (await page.$('.bt-off')).click(); }
   // acheter les cartes abordables sur les emplacements libres
   for (let k = 0; k < 4; k++) {
     const offs = await page.$$('.bt-off:not(.bt-off-no)'); if (!offs.length) break;

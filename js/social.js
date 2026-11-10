@@ -136,7 +136,7 @@ var tradeSort = 'rar_desc', tradeQuery = '';
 var TRADE_SORTS = [
     ['rar_desc','Rareté (haute → basse)'], ['rar_asc','Rareté (basse → haute)'],
     ['note_desc','Note (haute → basse)'], ['note_asc','Note (basse → haute)'],
-    ['atk_desc','Attaque ↓'], ['def_desc','Défense ↓'], ['hp_desc','PV ↓'],
+    ['atk_desc','Attaque ↓'], ['hp_desc','PV ↓'],
     ['name_asc','Nom A → Z'], ['name_desc','Nom Z → A']
 ];
 
@@ -149,7 +149,7 @@ function tradeSourceList() {
         if (already.indexOf(inst.instance_id) !== -1) return;
         var c = cardById(inst.card_id); if (!c) return;
         if (q && c.t.toLowerCase().indexOf(q) === -1 && String(c.cat||'').toLowerCase().indexOf(q) === -1) return;
-        list.push({inst: inst, c: c, note: calculateNote(c.r, inst.hp, inst.attack, inst.defense)});
+        list.push({inst: inst, c: c, note: calculateNote(c.r, inst.hp, inst.attack)});
     });
     var key = tradeSort.split('_')[0], dir = tradeSort.split('_')[1] === 'asc' ? 1 : -1;
     list.sort(function(a, b){
@@ -157,7 +157,6 @@ function tradeSourceList() {
         if (key === 'rar') { va = ri(a.c.r); vb = ri(b.c.r); }
         else if (key === 'note') { va = a.note; vb = b.note; }
         else if (key === 'atk') { va = a.inst.attack; vb = b.inst.attack; }
-        else if (key === 'def') { va = a.inst.defense; vb = b.inst.defense; }
         else if (key === 'hp') { va = a.inst.hp; vb = b.inst.hp; }
         else { return a.c.t.localeCompare(b.c.t, 'fr') * dir; }
         if (va === vb) { // égalité : note puis nom

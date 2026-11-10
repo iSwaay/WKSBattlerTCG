@@ -32,8 +32,8 @@ function renderViewCards(mode) {
     if (sortMode === 'rar_desc') return ri(b.r) - ri(a.r) || a.t.localeCompare(b.t, 'fr');
     if (sortMode === 'rar_asc') return ri(a.r) - ri(b.r) || a.t.localeCompare(b.t, 'fr');
     if (sortMode === 'note_desc' || sortMode === 'note_asc') {
-        var nA = calculateNote(a.r, a.hp, a.attack, a.defense);
-        var nB = calculateNote(b.r, b.hp, b.attack, b.defense);
+        var nA = calculateNote(a.r, a.hp, a.attack);
+        var nB = calculateNote(b.r, b.hp, b.attack);
         var valA = nA === '?' ? 0 : parseInt(nA);
         var valB = nB === '?' ? 0 : parseInt(nB);
         if (sortMode === 'note_desc') return valB - valA || ri(b.r) - ri(a.r) || a.t.localeCompare(b.t, 'fr');
@@ -87,7 +87,7 @@ function renderViewCards(mode) {
 var stackMode = false, curNav = null, curZoom = null;
 function stackInstances(cid){
   return (window.myInstances || []).filter(function(i){ return i.card_id === cid; })
-    .sort(function(a, b){ return (b.hp + b.attack + b.defense) - (a.hp + a.attack + a.defense); });
+    .sort(function(a, b){ return (b.hp + b.attack) - (a.hp + a.attack); });
 }
 function syncStackBtn(){
   var b = $('btn-stack'); if (!b) return;

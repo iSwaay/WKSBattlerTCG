@@ -242,3 +242,13 @@ main .panel.shop-item{text-align:center;padding:18px 14px;gap:8px}
 .brand img{height:108px!important;margin:-26px 0 -28px -16px}
 @media (max-width:520px){.brand img{height:84px!important;margin:-18px 0 -20px -12px}}
 .shop-item .btn{white-space:nowrap;font-size:13.5px;padding:9px 6px}
+
+/* ---- limites de raretés dans les decks ---- */
+.dke-lims{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font:600 12px var(--body);color:var(--muted);margin:6px 0 2px}
+.dk-lim{padding:2px 8px;border-radius:99px;border:1px solid currentColor;font-weight:700}
+.dk-lim.dk-r-r{color:var(--r)}.dk-lim.dk-r-e{color:var(--e)}.dk-lim.dk-r-l{color:var(--l)}
+.dk-lim.full{background:rgba(255,255,255,.08)}
+.dk-lim.over,.dkc-rar .over{color:#ff6b6b!important;border-color:#ff6b6b;background:rgba(255,80,80,.12)}
+.dke-lims .dke-warn{display:inline;margin:0}
+/* cartes de la collection : deux pastilles (ATQ, PV) */
+.card-stats{width:70%;gap:2cqw}
